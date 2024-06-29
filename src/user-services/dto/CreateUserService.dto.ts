@@ -3,7 +3,7 @@ import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
 export class CreateUserServiceDto {
   @IsNotEmpty()
   @IsString()
-  serviceImage: string;  // This could be a URL or a path to the image
+  serviceImage: string; // This could be a URL or a path to the image
 
   @IsNotEmpty()
   @IsString()
@@ -39,5 +39,5 @@ export class CreateUserServiceDto {
 
   @IsNotEmpty()
   @IsString()
-  createdBy: string;  // User ID from token
+  createdBy: string; // User ID from token
 }
