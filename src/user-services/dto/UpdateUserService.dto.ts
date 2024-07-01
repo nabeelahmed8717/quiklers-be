@@ -41,7 +41,4 @@ export class UpdateUserServiceDto {
   @IsNumber()
   hourlyRate?: number;
 
-  @IsOptional()
-  @IsString()
-  createdBy?: string;
 }

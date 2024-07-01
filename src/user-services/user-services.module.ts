@@ -4,6 +4,7 @@ import { UserServicesService } from './user-services.service';
 import { UserServicesController } from './user-services.controller';
 import { UserService, UserServiceSchema } from './schema/UserService.schema';
 import { User, UserScheme } from 'src/users/schemas/User.schema';
+import { PaginationModule } from 'src/common/pagination/pagination.module';
 
 @Module({
   imports: [
