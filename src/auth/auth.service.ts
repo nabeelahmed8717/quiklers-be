@@ -19,18 +19,6 @@ export class AuthService {
     private usersService: UsersService,
   ) {}
 
-  // validateUser({ username, password }: AuthPayloadDto) {
-
-  //   console.log({ username, password })
-  //   const findUser = fakeUser.find((user) => user.username === username);
-  //   console.log("findUser", findUser)
-  //   if (!findUser) return null;
-  //   if (password === findUser.password) {
-  //     const { password, ...user } = findUser;
-  //     return this.jwtService.sign(user);
-  //   }
-  // }
-
   async validateUser({ username, password }: AuthPayloadDto) {
     const findUser: User = await this.usersService.findByUsername(username);
     console.log("findUser", findUser)

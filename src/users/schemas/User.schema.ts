@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
-import { UserSettings } from './UsersSettingSchema';
+import { SellerProfile } from './SellerProfileSchema';
 
 @Schema({ timestamps: true }) 
 export class User {
@@ -25,8 +25,8 @@ export class User {
   @Prop()
   userRole: string[];
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'UserSettings' })
-  settings?: UserSettings;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'SellerProfile' })
+  sellerProfile?: SellerProfile;
 
 }
 

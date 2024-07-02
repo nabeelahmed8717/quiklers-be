@@ -54,5 +54,5 @@ export class CreateUserDto {
   @IsOptional()
   @ValidateNested()
   @Type(() => CreateUserSettingsDto)
-  settings?: CreateUserSettingsDto;
+  sellerProfile?: CreateUserSettingsDto;
 }

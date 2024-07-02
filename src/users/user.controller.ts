@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Request,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -16,11 +17,11 @@ import { CreateUserDto } from './dto/User.dto';
 import mongoose from 'mongoose';
 import { UpdateUserDto } from './dto/UpdateUser.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { UpdateSellerProfileDto } from './dto/UpdateSellerProfile.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
-
   @Post()
   @UsePipes(new ValidationPipe())
   createUser(@Body() createUserDto: CreateUserDto) {
@@ -44,12 +45,13 @@ export class UsersController {
     return findUser;
   }
 
-  @Patch(':id')
+  @Patch('update-user')
   @UsePipes(new ValidationPipe())
-  updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    const isValid = mongoose.Types.ObjectId.isValid(id);
+  updateUser(@Body() updateUserDto: UpdateUserDto, @Request() req) {
+    const userId = req?.user?._doc?._id;
+    const isValid = mongoose.Types.ObjectId.isValid(userId);
     if (!isValid) throw new HttpException('Invalid ID', 404);
-    return this.usersService.updateUser(id, updateUserDto);
+    return this.usersService.updateUser(userId, updateUserDto);
   }
 
   @Delete(':id')
@@ -60,5 +62,21 @@ export class UsersController {
     const deletedUser = await this.usersService.deleteUser(id);
     console.log(deletedUser);
     if (!deletedUser) throw new HttpException('User not found', 404);
+  }
+
+  @Patch('seller-profile')
+  @UseGuards(JwtAuthGuard)
+  @UsePipes(new ValidationPipe())
+  async updateSellerProfile(
+    @Body() updateSellerProfileDto: UpdateSellerProfileDto,
+    @Request() req,
+  ) {
+    const sellerProfileId = req?.user?._doc?.sellerProfile;
+    const isValid = mongoose.Types.ObjectId.isValid(sellerProfileId);
+    if (!isValid) throw new HttpException('Invalid ID', 404);
+    return this.usersService.updateSellerProfile(
+      sellerProfileId,
+      updateSellerProfileDto,
+    );
   }
 }
