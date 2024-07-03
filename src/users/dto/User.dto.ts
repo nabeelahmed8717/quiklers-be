@@ -19,6 +19,17 @@ export class CreateUserSettingsDto {
   @IsBoolean()
   receiveSMS?: boolean;
 }
+export class CreateCollaboratorProfileDto {
+  @IsOptional()
+  @IsBoolean()
+  receiveNotifications?: boolean;
+  @IsOptional()
+  @IsBoolean()
+  receiveEmails?: boolean;
+  @IsOptional()
+  @IsBoolean()
+  receiveSMS?: boolean;
+}
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -55,4 +66,9 @@ export class CreateUserDto {
   @ValidateNested()
   @Type(() => CreateUserSettingsDto)
   sellerProfile?: CreateUserSettingsDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateCollaboratorProfileDto)
+  collaboratorProfile?: CreateCollaboratorProfileDto;
 }

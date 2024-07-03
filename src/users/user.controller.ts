@@ -18,6 +18,7 @@ import mongoose from 'mongoose';
 import { UpdateUserDto } from './dto/UpdateUser.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { UpdateSellerProfileDto } from './dto/UpdateSellerProfile.dto';
+import { UpdateCollaboratorProfileDto } from './dto/UpdateCollaboratorProfile.dto';
 
 @Controller('users')
 export class UsersController {
@@ -77,6 +78,22 @@ export class UsersController {
     return this.usersService.updateSellerProfile(
       sellerProfileId,
       updateSellerProfileDto,
+    );
+  }
+
+  @Patch('collaborator-profile')
+  @UseGuards(JwtAuthGuard)
+  @UsePipes(new ValidationPipe())
+  async updateCollaboratorProfile(
+    @Body() updateCollaboratorProfileDto: UpdateCollaboratorProfileDto,
+    @Request() req,
+  ) {
+    const collaboratorProfileId = req?.user?._doc?.collaboratorProfile;
+    const isValid = mongoose.Types.ObjectId.isValid(collaboratorProfileId);
+    if (!isValid) throw new HttpException('Invalid ID', 404);
+    return this.usersService.updateCollaboratorProfile(
+      collaboratorProfileId,
+      updateCollaboratorProfileDto,
     );
   }
 }

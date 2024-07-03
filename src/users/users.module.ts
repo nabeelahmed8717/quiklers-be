@@ -4,6 +4,7 @@ import { UsersService } from './users.service';
 import { UsersController } from './user.controller';
 import { User, UserScheme } from './schemas/User.schema';
 import { SellerProfile, SellerProfileScheme } from './schemas/SellerProfileSchema';
+import { CollaboratorProfile, CollaboratorProfileScheme } from './schemas/CollaboratorProfileSchema';
 
 @Module({
   imports: [
@@ -15,6 +16,10 @@ import { SellerProfile, SellerProfileScheme } from './schemas/SellerProfileSchem
       {
         name: SellerProfile.name,
         schema: SellerProfileScheme,
+      },
+      {
+        name: CollaboratorProfile.name,
+        schema: CollaboratorProfileScheme,
       },
     ]),
   ],

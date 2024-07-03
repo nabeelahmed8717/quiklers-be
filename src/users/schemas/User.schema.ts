@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { SellerProfile } from './SellerProfileSchema';
+import { CollaboratorProfile } from './CollaboratorProfileSchema';
 
 @Schema({ timestamps: true }) 
 export class User {
@@ -27,6 +28,9 @@ export class User {
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'SellerProfile' })
   sellerProfile?: SellerProfile;
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'CollaboratorProfile' })
+  collaboratorProfile?: CollaboratorProfile;
 
 }
 
