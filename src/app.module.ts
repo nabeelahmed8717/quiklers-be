@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { UserServicesModule } from './user-services/user-services.module';
+import { BookingsModule } from './bookings/bookings.module';
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
 
@@ -15,6 +16,7 @@ const envConfig = dotenv.parse(fs.readFileSync('.env'));
     UsersModule,
     AuthModule,
     UserServicesModule,
+    BookingsModule,
   ],
   controllers: [],
   providers: [],

@@ -39,7 +39,12 @@ export class UserServicesController {
   ) {
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
-    return this.userServicesService.findAll(pageNumber, limitNumber, search, userId);
+    return this.userServicesService.findAll(
+      pageNumber,
+      limitNumber,
+      search,
+      userId,
+    );
   }
 
   @Get(':id')

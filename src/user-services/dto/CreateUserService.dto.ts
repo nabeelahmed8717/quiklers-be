@@ -38,6 +38,7 @@ export class CreateUserServiceDto {
   hourlyRate: number;
 
   @IsNotEmpty()
+  @IsOptional()
   @IsString()
   createdBy: string; // User ID from token
 }

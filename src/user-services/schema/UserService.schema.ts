@@ -31,8 +31,6 @@ export class UserService extends Document {
   @Prop({ required: true })
   hourlyRate: number;
 
-  // @Prop({ required: true })
-  // createdBy: string;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   createdBy: User;
