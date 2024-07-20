@@ -23,6 +23,9 @@ export class UserService extends Document {
   serviceType: string;
 
   @Prop({ required: true })
+  serviceTypeTitle: string;
+
+  @Prop({ required: true })
   serviceDescription: string;
 
   @Prop()
@@ -32,8 +35,10 @@ export class UserService extends Document {
   hourlyRate: number;
 
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
   createdBy: User;
+
+  
 }
 
 export const UserServiceSchema = SchemaFactory.createForClass(UserService);

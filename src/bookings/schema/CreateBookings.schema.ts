@@ -11,7 +11,7 @@ export class Booking extends Document {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'UserService', required: true })
   serviceInfo: UserService;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   bookingStatus: string;
 
   @Prop({ required: false })
@@ -20,8 +20,21 @@ export class Booking extends Document {
   @Prop({ required: false })
   serviceReviews: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   paymentStatus: string;
+
+  @Prop({ required: false })
+  bookingDate: string;
+
+  @Prop({ required: false })
+  bookingTime: string;
+
+  @Prop({ required: false })
+  bookingLocation: string;
+
+  @Prop({ required: false })
+  isUrgent: boolean;
+  
 }
 
 export const BookingSchema = SchemaFactory.createForClass(Booking);

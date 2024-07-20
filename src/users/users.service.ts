@@ -8,7 +8,7 @@ import { User } from './schemas/User.schema';
 import { UpdateSellerProfileDto } from './dto/UpdateSellerProfile.dto';
 import { CollaboratorProfile } from './schemas/CollaboratorProfileSchema';
 import { UpdateCollaboratorProfileDto } from './dto/UpdateCollaboratorProfile.dto';
-
+import * as bcrypt from 'bcrypt';
 @Injectable()
 export class UsersService {
   constructor(
@@ -42,25 +42,33 @@ export class UsersService {
     let collaboratorProfileId;
 
     if (sellerProfile) {
-      const newSellerProfile = new this.sellerProfileModel(sellerProfile);
+      // const newSellerProfile = new this.sellerProfileModel(sellerProfile);
+      const newSellerProfile = new this.sellerProfileModel({
+        ...sellerProfile,
+        isProfileVerified: false,
+      });
       const savedSellerProfile = await newSellerProfile.save();
       sellerProfileId = savedSellerProfile._id;
     }
 
     if (collaboratorProfile) {
-      const newCollaboratorProfile = new this.collaboratorProfileModel(
-        collaboratorProfile,
-      );
+      const newCollaboratorProfile = new this.collaboratorProfileModel({
+        ...collaboratorProfile,
+        isProfileVerified: false,
+        servicesDone:[],
+      });
       const savedCollaboratorProfile = await newCollaboratorProfile.save();
       collaboratorProfileId = savedCollaboratorProfile._id;
     }
 
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
+
     const newUser = new this.userModel({
       ...createUserDto,
+      password: hashedPassword, // Save hashed password
       ...(sellerProfileId && { sellerProfile: sellerProfileId }),
-      ...(collaboratorProfileId && {
-        collaboratorProfile: collaboratorProfileId,
-      }),
+      ...(collaboratorProfileId && { collaboratorProfile: collaboratorProfileId }),
     });
 
     return newUser.save();

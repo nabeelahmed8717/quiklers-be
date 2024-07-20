@@ -25,6 +25,12 @@ class EducationDto {
   description: string;
 }
 
+
+
+class ServiceDto {
+ 
+}
+
 export class UpdateCollaboratorProfileDto {
   @IsOptional()
   @IsString()
@@ -53,4 +59,13 @@ export class UpdateCollaboratorProfileDto {
   @IsOptional()
   @IsNumber()
   profileHourlyRate?: number;
+
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @ArrayMinSize(1)
+  @Type(() => ServiceDto)
+  servicesDone?: ServiceDto[];
+
 }

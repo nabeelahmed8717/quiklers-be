@@ -16,6 +16,9 @@ class Education {
   @Prop({ required: true })
   description: string;
 }
+class ServicesDone {
+  
+}
 
 @Schema()
 export class SellerProfile extends Document {
@@ -38,6 +41,14 @@ export class SellerProfile extends Document {
 
   @Prop({ required: false })
   profileHourlyRate?: number;
+
+
+  @Prop({ required: false })
+  isProfileVerified?: boolean;
+
+  @Prop({ type: [ServicesDone], required: false })
+  servicesDone?: ServicesDone[];
+  
 }
 
 export const SellerProfileScheme = SchemaFactory.createForClass(SellerProfile);

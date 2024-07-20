@@ -22,50 +22,6 @@ export class UserServicesService {
     return newUserService.save();
   }
 
-  // async findAll(
-  //   page: number = 1,
-  //   limit: number = 10,
-  //   search?: string,
-  // ): Promise<{
-  //   data: UserService[];
-  //   total: number;
-  //   page: number;
-  //   lastPage: number;
-  //   limit: number;
-  // }> {
-  //   const skip = (page - 1) * limit;
-  //   const query = search
-  //     ? {
-  //         $or: [
-  //           { serviceTitle: { $regex: search, $options: 'i' } },
-  //           { serviceDescription: { $regex: search, $options: 'i' } },
-  //           { serviceType: { $regex: search, $options: 'i' } },
-  //           // Add more fields as necessary
-  //         ],
-  //       }
-  //     : {};
-
-  //   const [data, total] = await Promise.all([
-  //     this.userServiceModel
-  //       .find(query)
-  //       .populate('createdBy')
-  //       .skip(skip)
-  //       .limit(limit)
-  //       .exec(),
-  //     this.userServiceModel.countDocuments(query),
-  //   ]);
-
-  //   const lastPage = Math.ceil(total / limit);
-
-  //   return {
-  //     data,
-  //     page,
-  //     limit,
-  //     total,
-  //     lastPage,
-  //   };
-  // }
-
   async findAll(
     page: number = 1,
     limit: number = 10,
@@ -93,7 +49,14 @@ export class UserServicesService {
     const [data, total] = await Promise.all([
       this.userServiceModel
         .find(query)
-        .populate('createdBy')
+        .populate({
+          path: 'createdBy',
+          select: '-password',
+          populate: [
+            { path: 'collaboratorProfile' },
+            { path: 'sellerProfile' },
+          ],
+        })
         .skip(skip)
         .limit(limit)
         .exec(),

@@ -8,6 +8,10 @@ export class UpdateUserServiceDto {
   @IsOptional()
   @IsString()
   serviceTitle?: string;
+  
+  @IsOptional()
+  @IsString()
+  serviceTypeTitle?: string;
 
   @IsOptional()
   @IsNumber()

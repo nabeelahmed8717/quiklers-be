@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsEnum, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsEnum, IsOptional, IsBoolean } from 'class-validator';
 import { Types } from 'mongoose';
 
 export class CreateBookingDto {
@@ -11,11 +11,11 @@ export class CreateBookingDto {
   @IsString()
   serviceInfo: Types.ObjectId;
 
-  @IsNotEmpty()
-  @IsEnum(['Pending', 'Confirmed', 'Cancelled'])
+  @IsOptional()
+  @IsEnum(['Pending', 'Confirmed', 'Cancelled', 'fulfilled'])
   bookingStatus: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsEnum(['Unpaid', 'Paid', 'Refunded'])
   paymentStatus: string;
 
@@ -26,4 +26,22 @@ export class CreateBookingDto {
   @IsOptional()
   @IsString()
   serviceReviews: string;
+
+  @IsOptional()
+  @IsString()
+  bookingDate: string;
+
+  @IsOptional()
+  @IsString()
+  bookingTime: string;
+
+  @IsOptional()
+  @IsString()
+  bookingLocation: string;
+
+
+  @IsOptional()
+  @IsBoolean()
+  isUrgent:boolean
+
 }

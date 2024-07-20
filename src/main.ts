@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as dotenv from 'dotenv';
+import mongoose from 'mongoose';
 
 async function bootstrap() {
 
@@ -14,6 +15,7 @@ async function bootstrap() {
   //   forbidNonWhitelisted: true,
   //   transform: true,
   // }));
+  app.enableCors();
   await app.listen(3000);
 }
 bootstrap();

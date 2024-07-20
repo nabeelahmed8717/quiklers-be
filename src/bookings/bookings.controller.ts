@@ -24,14 +24,14 @@ export class BookingsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   create(@Body() createBookingDto: CreateBookingDto, @Request() req) {
-    createBookingDto.createdBy = req?.user?._doc?._id;
+    createBookingDto.createdBy = req?.user?._id;
     return this.bookingsService.create(createBookingDto);
   }
 
   @Get()
   @UseGuards(JwtAuthGuard)
   findAll(@Request() req) {
-    const userId = req?.user?._doc?._id;
+    const userId = req?.user?._id;
     if (userId) {
       console.log('userId', userId);
       return this.bookingsService.findAll(userId);

@@ -38,6 +38,9 @@ export class CollaboratorProfile extends Document {
 
   @Prop({ required: false })
   profileHourlyRate?: number;
+
+  @Prop({ required: false })
+  isProfileVerified?: boolean;
 }
 
 export const CollaboratorProfileScheme = SchemaFactory.createForClass(CollaboratorProfile);

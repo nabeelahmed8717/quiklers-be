@@ -8,28 +8,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-export class CreateUserSettingsDto {
-  @IsOptional()
-  @IsBoolean()
-  receiveNotifications?: boolean;
-  @IsOptional()
-  @IsBoolean()
-  receiveEmails?: boolean;
-  @IsOptional()
-  @IsBoolean()
-  receiveSMS?: boolean;
-}
-export class CreateCollaboratorProfileDto {
-  @IsOptional()
-  @IsBoolean()
-  receiveNotifications?: boolean;
-  @IsOptional()
-  @IsBoolean()
-  receiveEmails?: boolean;
-  @IsOptional()
-  @IsBoolean()
-  receiveSMS?: boolean;
-}
+export class CreateSellerProfileDto {}
+export class CreateCollaboratorProfileDto {}
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -61,11 +41,13 @@ export class CreateUserDto {
   @IsString({ each: true })
   userRole: string[];
 
+  @IsOptional()
+  country: string[];
 
   @IsOptional()
   @ValidateNested()
-  @Type(() => CreateUserSettingsDto)
-  sellerProfile?: CreateUserSettingsDto;
+  @Type(() => CreateSellerProfileDto)
+  sellerProfile?: CreateSellerProfileDto;
 
   @IsOptional()
   @ValidateNested()
