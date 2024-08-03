@@ -20,7 +20,6 @@ export class AuthService {
     private usersService: UsersService,
   ) {}
 
-
   async validateUser({ username, password }: AuthPayloadDto) {
     const findUser: User = await this.usersService.findByUsername(username);
     if (!findUser) return null;
@@ -33,5 +32,8 @@ export class AuthService {
     return null;
   }
 
-
+  async getUserById(userId: string): Promise<User | null> {
+    return this.usersService.getUserById(userId);
+  }
+  
 }

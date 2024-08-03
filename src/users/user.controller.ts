@@ -36,16 +36,6 @@ export class UsersController {
     return this.usersService.getUsers();
   }
 
-  @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  async getUserById(@Param('id') id: string) {
-    const isValid = mongoose.Types.ObjectId.isValid(id);
-    if (!isValid) throw new HttpException('User not found', 404);
-    const findUser = await this.usersService.getUserById(id);
-    if (!findUser) throw new HttpException('User not found', 404);
-    return findUser;
-  }
-
   @Patch('update-user')
   @UsePipes(new ValidationPipe())
   updateUser(@Body() updateUserDto: UpdateUserDto, @Request() req) {

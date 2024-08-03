@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Request,
   UseGuards,
   UsePipes,
@@ -30,13 +31,27 @@ export class BookingsController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  findAll(@Request() req) {
+  findAll(@Request() req, @Query('fulfilled') fulfilled: string) {
     const userId = req?.user?._id;
     if (userId) {
       console.log('userId', userId);
-      return this.bookingsService.findAll(userId);
+      const status = fulfilled === 'true' ? 'Fulfilled' : null;
+      return this.bookingsService.findAll(userId, status);
     }
   }
+
+
+  @Get('/requests')
+  @UseGuards(JwtAuthGuard)
+  async findAllBookingsRequests(@Request() req, @Query('fulfilled') fulfilled: string) {
+    const userId = req?.user?._id;
+    if (userId) {
+      console.log('userId', userId);
+      const status = fulfilled === 'true' ? 'Fulfilled' : null;
+      return this.bookingsService.findAllBookingsRequests(userId, status);
+    }
+  }
+
 
   @Patch(':id/update-status')
   @UseGuards(JwtAuthGuard)

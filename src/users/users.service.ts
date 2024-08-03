@@ -55,7 +55,7 @@ export class UsersService {
       const newCollaboratorProfile = new this.collaboratorProfileModel({
         ...collaboratorProfile,
         isProfileVerified: false,
-        servicesDone:[],
+        servicesDone: [],
       });
       const savedCollaboratorProfile = await newCollaboratorProfile.save();
       collaboratorProfileId = savedCollaboratorProfile._id;
@@ -68,7 +68,9 @@ export class UsersService {
       ...createUserDto,
       password: hashedPassword, // Save hashed password
       ...(sellerProfileId && { sellerProfile: sellerProfileId }),
-      ...(collaboratorProfileId && { collaboratorProfile: collaboratorProfileId }),
+      ...(collaboratorProfileId && {
+        collaboratorProfile: collaboratorProfileId,
+      }),
     });
 
     return newUser.save();
@@ -114,19 +116,19 @@ export class UsersService {
   //   ]);
   // }
 
-  getUserById(id: string) {
-    return this.userModel
-      .findById(id)
-      .select('-password -__v')
-      .populate({
-        path: 'sellerProfile',
-        select: '-__v',
-      })
-      .populate({
-        path: 'collaboratorProfile',
-        select: '-__v',
-      });
-  }
+  // getUserById(id: string) {
+  //   return this.userModel
+  //     .findById(id)
+  //     .select('-password -__v')
+  //     .populate({
+  //       path: 'sellerProfile',
+  //       select: '-__v',
+  //     })
+  //     .populate({
+  //       path: 'collaboratorProfile',
+  //       select: '-__v',
+  //     });
+  // }
 
   updateUser(id: string, updateUserDto: UpdateUserDto) {
     return this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true });
@@ -168,5 +170,9 @@ export class UsersService {
       throw new NotFoundException('Seller profile not found');
     }
     return collaboratorProfile;
+  }
+
+  async getUserById(userId: string): Promise<User | null> {
+    return this.userModel.findById(userId).select('-password').exec();
   }
 }

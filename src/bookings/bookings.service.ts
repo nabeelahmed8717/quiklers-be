@@ -23,12 +23,59 @@ export class BookingsService {
     return newBooking.save();
   }
 
-  async findAll(userId: string): Promise<Booking[]> {
+  async findAll(userId: string, status?: string): Promise<Booking[]> {
+    const query: any = { createdBy: userId };
+    if (status) {
+      query.bookingStatus = status;
+    } else {
+      query.bookingStatus = { $ne: 'Fulfilled' };
+    }
     return this.bookingModel
-      .find({ createdBy: userId })
-      .populate('createdBy')
+      .find(query)
       .populate('serviceInfo')
+      .populate({
+        path: 'serviceInfo',
+        populate: {
+          path: 'createdBy',
+          select: 'firstName lastName',
+        },
+      })
       .exec();
+  }
+
+  async findAllBookingsRequests(
+    userId: string,
+    status?: string,
+  ): Promise<Booking[]> {
+    const query: any = {};
+
+    // If status is provided, use it in the query
+    if (status) {
+      query.bookingStatus = status;
+    } else {
+      // Exclude 'Fulfilled' status if no status is provided
+      query.bookingStatus = { $ne: 'Fulfilled' };
+    }
+
+    const bookings = await this.bookingModel
+      .find(query)
+      .populate('serviceInfo')
+      .populate({
+        path: 'createdBy',
+        select: 'firstName lastName',
+      })
+      .populate({
+        path: 'serviceInfo',
+        populate: {
+          path: 'createdBy',
+          select: 'firstName lastName',
+        },
+      })
+      .exec();
+    return bookings.filter(
+      (booking: any) =>
+        booking?.serviceInfo?.createdBy?._id?.toString() === userId,
+    );
   }
 
   // Update booking status
@@ -58,7 +105,10 @@ export class BookingsService {
   }
 
   // Add reviews
-  async addReviews(id: string, addBookingReviewsDto: AddBookingReviewsDto): Promise<Booking> {
+  async addReviews(
+    id: string,
+    addBookingReviewsDto: AddBookingReviewsDto,
+  ): Promise<Booking> {
     const booking = await this.bookingModel.findById(id);
     if (!booking) {
       throw new NotFoundException('Booking not found');
@@ -71,6 +121,4 @@ export class BookingsService {
     }
     return booking.save();
   }
-
-
 }
