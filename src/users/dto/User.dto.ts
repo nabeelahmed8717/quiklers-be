@@ -53,4 +53,5 @@ export class CreateUserDto {
   @ValidateNested()
   @Type(() => CreateCollaboratorProfileDto)
   collaboratorProfile?: CreateCollaboratorProfileDto;
+  
 }

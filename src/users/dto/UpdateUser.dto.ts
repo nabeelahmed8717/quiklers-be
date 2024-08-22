@@ -29,4 +29,14 @@ export class UpdateUserDto {
     @IsOptional()
     @IsString()
     userRole?: string[];
+
+    @IsOptional()
+    userAvatar?: {
+      key: string;
+      mimetype: string;
+      size: number;
+      originalName: string;
+    };
+
+    
 }

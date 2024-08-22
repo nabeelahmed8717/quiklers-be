@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -17,17 +18,60 @@ import { CreateBookingDto } from './dto/CreateBookings.dto';
 import { UpdateBookingStatusDto } from './dto/UpdateBookingsStatus.dto';
 import { UpdateBookingPaymentDto } from './dto/UpdateBookingsPayments.dto';
 import { AddBookingReviewsDto } from './dto/AddBookingsReviews.dto';
+import { UserServicesService } from 'src/user-services/user-services.service';
+import { Types } from 'mongoose';
 
 @Controller('bookings')
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(
+    private readonly bookingsService: BookingsService,
+    private readonly userServicesService: UserServicesService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  create(@Body() createBookingDto: CreateBookingDto, @Request() req) {
+  // async create(@Body() createBookingDto: CreateBookingDto, @Request() req) {
+
+  //   const serviceIdString = (createBookingDto.serviceInfo as Types.ObjectId).toString();
+
+  //   const service = await this.userServicesService.findOne(serviceIdString);
+  //   const ownerId = service.createdBy?.['_id']?.toString();
+
+  //   createBookingDto.ownerId = ownerId;
+  //   createBookingDto.createdBy = req?.user?._id;
+  //   return this.bookingsService.create(createBookingDto);
+  // }
+
+  async create(@Body() createBookingDto: CreateBookingDto, @Request() req) {
+  try {
+    const serviceIdString = (createBookingDto.serviceInfo as Types.ObjectId).toString();
+    
+    // Retrieve the service and its owner information
+    const service = await this.userServicesService.findOne(serviceIdString);
+    
+    if (!service) {
+      throw new Error('Service not found');
+    }
+    
+    const ownerId = service.createdBy?.['_id']?.toString();
+
+    if (!ownerId) {
+      throw new Error('Owner ID not found');
+    }
+
+    // Set the ownerId and createdBy fields in the DTO
+    createBookingDto.ownerId = ownerId;
     createBookingDto.createdBy = req?.user?._id;
-    return this.bookingsService.create(createBookingDto);
+
+    // Create the booking
+    return await this.bookingsService.create(createBookingDto);
+
+  } catch (error) {
+    // Log the error and return an appropriate response
+    console.error('Error creating booking:', error.message);
+    throw new BadRequestException('Failed to create booking. ' + error.message);
   }
+}
+
 
   @Get()
   @UseGuards(JwtAuthGuard)

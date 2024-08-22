@@ -5,10 +5,10 @@ import * as dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { DelayMiddleware } from './Middlewares/delay.middleware';
 
+dotenv.config();
+
 async function bootstrap() {
 
-  dotenv.config();
-  
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors();

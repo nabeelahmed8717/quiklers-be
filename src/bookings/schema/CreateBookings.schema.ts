@@ -12,6 +12,9 @@ export class Booking extends Document {
   serviceInfo: UserService;
 
   @Prop({ required: false })
+  ownerId: string;
+
+  @Prop({ required: false })
   bookingStatus: string;
 
   @Prop({ required: false })

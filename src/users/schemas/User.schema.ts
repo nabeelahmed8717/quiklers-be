@@ -40,6 +40,25 @@ export class User {
   @Prop()
   country: string;
 
+  // @Prop()
+  // userAvatar: string;
+  @Prop({
+    type: {
+      url: String,
+      key: String,
+      mimetype: String,
+      size: Number,
+      originalName: String,
+    },
+  })
+  userAvatar: {
+    // url: string;
+    key: string;
+    mimetype: string;
+    size: number;
+    originalName: string;
+  };
+
 }
 
 

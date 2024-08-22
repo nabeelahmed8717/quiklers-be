@@ -15,6 +15,11 @@ export class CreateBookingDto {
 
   @IsNotEmpty()
   @IsString()
+  @IsOptional()
+  ownerId: string;
+
+  @IsNotEmpty()
+  @IsString()
   serviceInfo: Types.ObjectId;
 
   @IsOptional()

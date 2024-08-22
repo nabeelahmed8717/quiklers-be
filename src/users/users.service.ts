@@ -175,4 +175,45 @@ export class UsersService {
   async getUserById(userId: string): Promise<User | null> {
     return this.userModel.findById(userId).select('-password').exec();
   }
+
+  async updateUserImagePath(id: string, file: any) {
+    const user = await this.userModel.findByIdAndUpdate(
+      id,
+      {
+        userAvatar: {
+          // url: file.url,
+          key: file.key,
+          mimetype: file.mimetype,
+          size: file.size,
+          originalName: file.originalName,
+        },
+      },
+      { new: true },
+    );
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
+  async getCollaboratorProfile(userId: string): Promise<User | null> {
+    return this.userModel
+      .findById(userId)
+      .select('-password -__v -sellerProfile')
+      .populate({
+        path: 'collaboratorProfile',
+        select: '-__v',
+      });
+  }
+  async getSellerProfile(userId: string): Promise<User | null> {
+    return this.userModel
+      .findById(userId)
+      .select('-password -__v -collaboratorProfile')
+      .populate({
+        path: 'sellerProfile',
+        select: '-__v',
+      })
+  }
+
+
 }

@@ -4,10 +4,12 @@ import {
   Delete,
   Get,
   HttpException,
+  HttpStatus,
   Param,
   Patch,
   Post,
   Request,
+  UploadedFile,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -19,6 +21,11 @@ import { UpdateUserDto } from './dto/UpdateUser.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { UpdateSellerProfileDto } from './dto/UpdateSellerProfile.dto';
 import { UpdateCollaboratorProfileDto } from './dto/UpdateCollaboratorProfile.dto';
+import * as fs from 'fs';
+import * as dotenv from 'dotenv';
+import { FileInterceptorFactory } from 'src/common/decorators/file-interceptor.decorator';
+
+const envConfig = dotenv.parse(fs.readFileSync('.env'));
 
 @Controller('users')
 export class UsersController {
@@ -38,8 +45,9 @@ export class UsersController {
 
   @Patch('update-user')
   @UsePipes(new ValidationPipe())
+  @UseGuards(JwtAuthGuard)
   updateUser(@Body() updateUserDto: UpdateUserDto, @Request() req) {
-    const userId = req?.user?._doc?._id;
+    const userId = req?.user?._id;
     const isValid = mongoose.Types.ObjectId.isValid(userId);
     if (!isValid) throw new HttpException('Invalid ID', 404);
     return this.usersService.updateUser(userId, updateUserDto);
@@ -62,7 +70,7 @@ export class UsersController {
     @Body() updateSellerProfileDto: UpdateSellerProfileDto,
     @Request() req,
   ) {
-    const sellerProfileId = req?.user?._doc?.sellerProfile;
+    const sellerProfileId = req?.user?.sellerProfile;
     const isValid = mongoose.Types.ObjectId.isValid(sellerProfileId);
     if (!isValid) throw new HttpException('Invalid ID', 404);
     return this.usersService.updateSellerProfile(
@@ -78,7 +86,7 @@ export class UsersController {
     @Body() updateCollaboratorProfileDto: UpdateCollaboratorProfileDto,
     @Request() req,
   ) {
-    const collaboratorProfileId = req?.user?._doc?.collaboratorProfile;
+    const collaboratorProfileId = req?.user?.collaboratorProfile;
     const isValid = mongoose.Types.ObjectId.isValid(collaboratorProfileId);
     if (!isValid) throw new HttpException('Invalid ID', 404);
     return this.usersService.updateCollaboratorProfile(
@@ -86,4 +94,42 @@ export class UsersController {
       updateCollaboratorProfileDto,
     );
   }
+
+  @Patch('upload-image')
+  @UseGuards(JwtAuthGuard)
+  @FileInterceptorFactory(envConfig.AWS_S3_BUCKET_NAME)
+  async uploadImage(@UploadedFile() file, @Request() req) {
+    if (!file) {
+      throw new HttpException('File not provided', HttpStatus.BAD_REQUEST);
+    }
+    const userId = req.user._id;
+    const updatedUser = await this.usersService.updateUserImagePath(userId, {
+      key: file.key,
+      mimetype: file.mimetype,
+      size: file.size,
+      originalName: file.originalname,
+    });
+    return {
+      message: 'Image uploaded successfully',
+      user: updatedUser,
+    };
+  }
+
+  //single profiles
+
+  @Get('collaborator-profile')
+  @UseGuards(JwtAuthGuard)
+  async collaboratorProfile(@Request() req) {
+    const userId = req?.user?._id;
+    return this.usersService.getCollaboratorProfile(userId);
+  }
+
+  @Get('seller-profile')
+  @UseGuards(JwtAuthGuard)
+  async sellerProfile(@Request() req) {
+    const userId = req?.user?._id;
+    return this.usersService.getSellerProfile(userId);
+  }
+
+
 }

@@ -32,7 +32,6 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   status(@Req() req: Request) {
     console.log('inside ath status');
-    console.log('user', req.user);
   }
 
   @Get('me')
