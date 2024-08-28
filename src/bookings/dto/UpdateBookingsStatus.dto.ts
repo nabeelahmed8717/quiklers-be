@@ -2,6 +2,6 @@ import { IsNotEmpty, IsEnum } from 'class-validator';
 
 export class UpdateBookingStatusDto {
   @IsNotEmpty()
-  @IsEnum(['Pending', 'Accepted', 'Cancelled', 'Fulfilled'])
+  @IsEnum(['Pending','InProgress', 'Cancelled', 'Fulfilled'])
   bookingStatus: string;
 }

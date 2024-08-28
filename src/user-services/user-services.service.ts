@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -15,12 +16,29 @@ export class UserServicesService {
     @InjectModel(UserService.name) private userServiceModel: Model<UserService>,
   ) {}
 
+  // async create(
+  //   createUserServiceDto: CreateUserServiceDto,
+  // ): Promise<UserService> {
+  //   const newUserService = new this.userServiceModel(createUserServiceDto);
+  //   return newUserService.save();
+  // }
+
+
+  // async create(
+  //   createUserServiceDto: CreateUserServiceDto,
+  // ): Promise<UserService> {
+  //   const newUserService = new this.userServiceModel(createUserServiceDto);
+  //   return newUserService.save();
+  // }
+
   async create(
     createUserServiceDto: CreateUserServiceDto,
   ): Promise<UserService> {
+    // Create a new UserService instance and save it
     const newUserService = new this.userServiceModel(createUserServiceDto);
     return newUserService.save();
   }
+  
 
   async findAll(
     page: number = 1,
@@ -105,18 +123,50 @@ export class UserServicesService {
     return userService;
   }
 
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(id: string, userId: string): Promise<{ message: string }> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid ID format');
     }
 
-    const deletedUserService = await this.userServiceModel
-      .findByIdAndDelete(id)
-      .exec();
-    if (!deletedUserService) {
-      throw new NotFoundException(`User service ID not found`);
+    const userService = await this.userServiceModel.findById(id).exec();
+    if (!userService) {
+      throw new NotFoundException('Service not found');
+    }
+    const createdById = userService?.createdBy?.toString(); // Convert to string
+    const userIdSt = userId?.toString(); // Convert to string
+
+    console.log('created', createdById);
+    console.log('user', userIdSt);
+
+    // Check if the `createdBy` field matches the userId
+    if (createdById !== userIdSt) {
+      throw new BadRequestException(
+        'You are not authorized to delete this service',
+      );
     }
 
+    // Delete the service
+    await this.userServiceModel.findByIdAndDelete(id).exec();
+
     return { message: 'User service deleted successfully' };
+  }
+
+  async getMyServices(userId: string): Promise<UserService[]> {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid user ID format');
+    }
+    const userServices = await this.userServiceModel
+      .find({ createdBy: userId })
+      .populate({
+        path: 'createdBy',
+        select: '-password', // Exclude the password field
+      })
+      .exec();
+
+    if (!userServices || userServices.length === 0) {
+      throw new NotFoundException(`No services found`);
+    }
+
+    return userServices;
   }
 }

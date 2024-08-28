@@ -11,25 +11,81 @@ import {
   Query,
   UsePipes,
   ValidationPipe,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { UserServicesService } from './user-services.service';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { CreateUserServiceDto } from './dto/CreateUserService.dto';
 import { UpdateUserServiceDto } from './dto/UpdateUserService.dto';
 
+import * as fs from 'fs';
+import * as dotenv from 'dotenv';
+import { FileInterceptorFactory } from 'src/common/decorators/file-interceptor.decorator';
+import { CustomFile } from 'src/common/interfaces/Express.Multer.File';
+
+const envConfig = dotenv.parse(fs.readFileSync('.env'));
+
 @Controller('user-services')
 export class UserServicesController {
   constructor(private readonly userServicesService: UserServicesService) {}
 
+  @Get('my-services')
+  @UseGuards(JwtAuthGuard)
+  async myServices(@Request() req) {
+    const userId = req?.user?._id;
+    return this.userServicesService.getMyServices(userId);
+  }
+
+  // @Post()
+  // @UseGuards(JwtAuthGuard)
+  // create(@Body() createUserServiceDto: CreateUserServiceDto, @Request() req) {
+  //   const userId = req?.user?._id;
+  //   if (userId) {
+  //     createUserServiceDto.createdBy = userId;
+  //     return this.userServicesService.create(createUserServiceDto);
+  //   }
+  // }
+
+  // @Post()
+  // @UseGuards(JwtAuthGuard)
+  // create(@Body() createUserServiceDto: CreateUserServiceDto, @Request() req) {
+  //   const userId = req?.user?._id
+  //   if(userId){
+  //     createUserServiceDto.createdBy = userId;
+  //     return this.userServicesService.create(createUserServiceDto);
+  //   }
+
+  // }
+
   @Post()
   @UseGuards(JwtAuthGuard)
-  create(@Body() createUserServiceDto: CreateUserServiceDto, @Request() req) {
-    const userId = req?.user?._id
-    if(userId){
+  @FileInterceptorFactory('arr-quiklers') // Replace with your actual bucket name
+  async create(
+    @Body() createUserServiceDto: CreateUserServiceDto,
+    @UploadedFile() file: CustomFile,
+    @Request() req,
+  ) {
+    const userId = req?.user?._id;
+
+    if (userId) {
+      // Add the user ID to the DTO
       createUserServiceDto.createdBy = userId;
+      console.log('file', file);
+      // If a file was uploaded, include its details in the DTO
+      if (file) {
+        createUserServiceDto.serviceImage = {
+          key: file.key,
+          mimetype: file.mimetype,
+          size: file.size,
+          originalName: file.originalname,
+        };
+      }
+
       return this.userServicesService.create(createUserServiceDto);
+    } else {
+      throw new BadRequestException('User ID not provided');
     }
-    
   }
 
   @Get()
@@ -69,7 +125,8 @@ export class UserServicesController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  remove(@Param('id') id: string) {
-    return this.userServicesService.remove(id);
+  remove(@Param('id') id: string, @Request() req) {
+    const userId = req.user._id;
+    return this.userServicesService.remove(id, userId);
   }
 }

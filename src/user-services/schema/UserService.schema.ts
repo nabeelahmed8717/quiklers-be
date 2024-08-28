@@ -4,41 +4,59 @@ import { User } from 'src/users/schemas/User.schema';
 
 @Schema({ timestamps: true })
 export class UserService extends Document {
-  @Prop({ required: true })
-  serviceImage: string;
+  // @Prop({ required: true })
+  // serviceImage: string;
+
+  @Prop({
+    type: {
+      url: String,
+      key: String,
+      mimetype: String,
+      size: Number,
+      originalName: String,
+    },
+  })
+  serviceImage: {
+    key: string;
+    mimetype: string;
+    size: number;
+    originalName: string;
+  };
 
   @Prop({ required: true })
   serviceTitle: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   ratings: number;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   jobAvailabilityMode: string;
 
-  @Prop()
+  @Prop({required:false})
   onlineSoftware?: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   serviceType: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   serviceTypeTitle: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   serviceDescription: string;
 
-  @Prop()
+  @Prop({ required: false })
   physicalAvailabilityMode?: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   hourlyRate: number;
 
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
   createdBy: User;
 
-  
+
 }
 
 export const UserServiceSchema = SchemaFactory.createForClass(UserService);
+
+

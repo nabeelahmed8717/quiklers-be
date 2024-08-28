@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -21,11 +22,14 @@ import { UpdateUserDto } from './dto/UpdateUser.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { UpdateSellerProfileDto } from './dto/UpdateSellerProfile.dto';
 import { UpdateCollaboratorProfileDto } from './dto/UpdateCollaboratorProfile.dto';
+import { UpdateSellerAvailabilityDto } from './dto/UpdateSellerAvailibility.dto';
+
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
-import { FileInterceptorFactory } from 'src/common/decorators/file-interceptor.decorator';
-
 const envConfig = dotenv.parse(fs.readFileSync('.env'));
+import { CustomFile } from 'src/common/interfaces/Express.Multer.File';
+import { FileInterceptorFactory } from 'src/common/decorators/file-interceptor.decorator';
+import { MulterBackblazeStorage } from 'src/common/engine/multer-backblaze-storage';
 
 @Controller('users')
 export class UsersController {
@@ -95,20 +99,63 @@ export class UsersController {
     );
   }
 
+  // @Patch('upload-image')
+  // @UseGuards(JwtAuthGuard)
+  // @FileInterceptorFactory()
+  // async uploadImage(@UploadedFile() file: CustomFile, @Request() req) {
+  //   if (!file) {
+  //     throw new HttpException('File not provided', HttpStatus.BAD_REQUEST);
+  //   }
+  //   const userId = req.user._id;
+  //   const updatedUser = await this.usersService.updateUserImagePath(userId, {
+  //     key: file.key,
+  //     mimetype: file.mimetype,
+  //     size: file.size,
+  //     originalName: file.originalname,
+  //   });
+  //   return {
+  //     message: 'Image uploaded successfully',
+  //     user: updatedUser,
+  //   };
+  // }
+
   @Patch('upload-image')
   @UseGuards(JwtAuthGuard)
-  @FileInterceptorFactory(envConfig.AWS_S3_BUCKET_NAME)
+  @FileInterceptorFactory('arr-quiklers') // Replace with your actual bucket name
   async uploadImage(@UploadedFile() file, @Request() req) {
     if (!file) {
-      throw new HttpException('File not provided', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('File not provided');
     }
     const userId = req.user._id;
+    const user: any = await this.usersService.getUserById(userId);
+
+    const oldImageKey = user?.userAvatar?.key;
+    const oldImageName = user?.userAvatar?.originalName;
+
     const updatedUser = await this.usersService.updateUserImagePath(userId, {
       key: file.key,
       mimetype: file.mimetype,
       size: file.size,
       originalName: file.originalname,
     });
+
+    if (oldImageKey && oldImageName) {
+      const storage = new MulterBackblazeStorage({
+        bucketName: 'arr-quiklers',
+      }); 
+      try {
+        await storage._removeFile(req, user?.userAvatar, (err) => {
+          if (err) {
+            console.error('Error removing the old image:', err);
+          } else {
+            console.log('Old image removed successfully');
+          }
+        });
+        console.log(`Old image ${oldImageName} deleted successfully`);
+      } catch (error) {
+        console.error(`Failed to delete old image ${oldImageName}:`, error);
+      }
+    }
     return {
       message: 'Image uploaded successfully',
       user: updatedUser,
@@ -131,5 +178,19 @@ export class UsersController {
     return this.usersService.getSellerProfile(userId);
   }
 
-
+  @Patch('seller-availability')
+  @UseGuards(JwtAuthGuard)
+  @UsePipes(new ValidationPipe())
+  async updateSellerAvailability(
+    @Body() updateSellerAvailabilityDto: UpdateSellerAvailabilityDto,
+    @Request() req,
+  ) {
+    const sellerProfileId = req?.user?.sellerProfile;
+    const isValid = mongoose.Types.ObjectId.isValid(sellerProfileId);
+    if (!isValid) throw new HttpException('Invalid ID', 404);
+    return this.usersService.updateSellerAvailability(
+      sellerProfileId,
+      updateSellerAvailabilityDto,
+    );
+  }
 }

@@ -9,29 +9,18 @@ import { UpdateSellerProfileDto } from './dto/UpdateSellerProfile.dto';
 import { CollaboratorProfile } from './schemas/CollaboratorProfileSchema';
 import { UpdateCollaboratorProfileDto } from './dto/UpdateCollaboratorProfile.dto';
 import * as bcrypt from 'bcrypt';
+import { Booking } from 'src/bookings/schema/CreateBookings.schema';
+import { UpdateSellerAvailabilityDto } from './dto/UpdateSellerAvailibility.dto';
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(Booking.name) private readonly bookingModel: Model<Booking>,
     @InjectModel(SellerProfile.name)
     private sellerProfileModel: Model<SellerProfile>,
     @InjectModel(CollaboratorProfile.name)
     private collaboratorProfileModel: Model<CollaboratorProfile>,
   ) {}
-
-  // async createUser({ sellerProfile, ...createUserDto }: CreateUserDto) {
-  //   if (sellerProfile) {
-  //     const newSettings = new this.sellerProfileModel(sellerProfile);
-  //     const savedNewSettings = await newSettings.save();
-  //     const newUser = new this.userModel({
-  //       ...createUserDto,
-  //       sellerProfile: savedNewSettings._id,
-  //     });
-  //     return newUser.save();
-  //   }
-  //   const newUser = new this.userModel(createUserDto);
-  //   return newUser.save();
-  // }
 
   async createUser({
     sellerProfile,
@@ -89,46 +78,6 @@ export class UsersService {
         select: '-__v',
       });
   }
-  // async getUsers() {
-  //   return this.userModel.aggregate([
-  //     {
-  //       $lookup: {
-  //         from: 'sellerprofiles',
-  //         localField: 'sellerProfile',
-  //         foreignField: '_id',
-  //         as: 'sellerProfileDetails'
-  //       }
-  //     },
-  //     {
-  //       $unwind: '$sellerProfileDetails'
-  //     },
-  //     {
-  //       $project: {
-  //         username: 1,
-  //         firstName: 1,
-  //         lastName: 1,
-  //         email: 1,
-  //         phone: 1,
-  //         userRole: 1,
-  //         sellerProfile: '$sellerProfileDetails'
-  //       }
-  //     }
-  //   ]);
-  // }
-
-  // getUserById(id: string) {
-  //   return this.userModel
-  //     .findById(id)
-  //     .select('-password -__v')
-  //     .populate({
-  //       path: 'sellerProfile',
-  //       select: '-__v',
-  //     })
-  //     .populate({
-  //       path: 'collaboratorProfile',
-  //       select: '-__v',
-  //     });
-  // }
 
   updateUser(id: string, updateUserDto: UpdateUserDto) {
     return this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true });
@@ -205,15 +154,50 @@ export class UsersService {
         select: '-__v',
       });
   }
+
   async getSellerProfile(userId: string): Promise<User | null> {
-    return this.userModel
+    const sellerProfile = await this.userModel
       .findById(userId)
       .select('-password -__v -collaboratorProfile')
       .populate({
         path: 'sellerProfile',
         select: '-__v',
-      })
+      });
+
+    if (!sellerProfile) {
+      throw new Error('User not found');
+    }
+    const bookings = await this.bookingModel
+      .find({ ownerId: userId })
+      .select('serviceInfo bookingStatus createdAt');
+
+    const servicesInfo = bookings.map((booking: any) => ({
+      serviceId: booking?.serviceInfo,
+      bookingId: booking?._id,
+      bookingStatus: booking?.bookingStatus,
+      createdAt: booking?.createdAt,
+    }));
+    sellerProfile.sellerProfile.servicesInfo = servicesInfo;
+    return sellerProfile;
   }
+
+  async updateSellerAvailability(
+    sellerProfileId: string,
+    updateSellerAvailabilityDto: UpdateSellerAvailabilityDto,
+  ): Promise<SellerProfile> {
+    const sellerProfile = await this.sellerProfileModel.findByIdAndUpdate(
+      sellerProfileId,
+      { availability: updateSellerAvailabilityDto.availability },
+      { new: true },
+    );
+
+    if (!sellerProfile) {
+      throw new NotFoundException('Seller profile not found');
+    }
+
+    return sellerProfile;
+  }
+
 
 
 }

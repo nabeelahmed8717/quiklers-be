@@ -53,4 +53,5 @@ export class UpdateSellerProfileDto {
   @IsOptional()
   @IsNumber()
   profileHourlyRate?: number;
+
 }

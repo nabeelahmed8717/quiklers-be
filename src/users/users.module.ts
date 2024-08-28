@@ -5,6 +5,7 @@ import { UsersController } from './user.controller';
 import { User, UserScheme } from './schemas/User.schema';
 import { SellerProfile, SellerProfileScheme } from './schemas/SellerProfileSchema';
 import { CollaboratorProfile, CollaboratorProfileScheme } from './schemas/CollaboratorProfileSchema';
+import { Booking, BookingSchema } from 'src/bookings/schema/CreateBookings.schema';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CollaboratorProfile, CollaboratorProfileScheme } from './schemas/Collab
         schema: CollaboratorProfileScheme,
       },
     ]),
+    MongooseModule.forFeature([{ name: Booking.name, schema: BookingSchema }]),
   ],
   providers: [UsersService],
   controllers: [UsersController],

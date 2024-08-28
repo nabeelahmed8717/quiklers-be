@@ -16,7 +16,7 @@ class Education {
   @Prop({ required: true })
   description: string;
 }
-class ServicesDone {
+class servicesInfo {
   
 }
 
@@ -46,8 +46,11 @@ export class SellerProfile extends Document {
   @Prop({ required: false })
   isProfileVerified?: boolean;
 
-  @Prop({ type: [ServicesDone], required: false })
-  servicesDone?: ServicesDone[];
+  @Prop({ required: false })
+  availability?: boolean;
+
+  @Prop({ type: [servicesInfo], required: false })
+  servicesInfo?: servicesInfo[];
   
 }
 
