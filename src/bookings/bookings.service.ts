@@ -22,32 +22,86 @@ export class BookingsService {
     return newBooking.save();
   }
 
-  async findAll(userId: string, status?: string): Promise<Booking[]> {
+
+
+  async findAll(
+    userId: string,
+    status?: string,
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+  ): Promise<{
+    data: Booking[];
+    total: number;
+    page: number;
+    pages: number;
+    limit: number;
+  }> {
+    const skip = (page - 1) * limit;
+    
+    // Building the query
     const query: any = { createdBy: userId };
     if (status) {
       query.bookingStatus = status;
     } else {
       query.bookingStatus = { $ne: 'Fulfilled' };
     }
-    return this.bookingModel
-      .find(query)
-      .populate('serviceInfo')
-      .populate({
-        path: 'serviceInfo',
-        populate: {
-          path: 'createdBy',
-          select: 'firstName lastName',
-        },
-      })
-      .exec();
+  
+    // Adding search functionality
+    if (search) {
+      query.$or = [
+        { 'serviceInfo.serviceTitle': { $regex: search, $options: 'i' } },
+        { 'serviceInfo.serviceDescription': { $regex: search, $options: 'i' } },
+      ];
+    }
+  
+    // Fetch data and count total documents
+    const [data, total] = await Promise.all([
+      this.bookingModel
+        .find(query)
+        .populate('serviceInfo')
+        .populate({
+          path: 'serviceInfo',
+          populate: {
+            path: 'createdBy',
+            select: 'firstName lastName',
+          },
+        })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.bookingModel.countDocuments(query),
+    ]);
+  
+    const pages = Math.ceil(total / limit);
+  
+    return {
+      data,
+      total,
+      page,
+      pages,
+      limit,
+    };
   }
+  
 
   async findAllBookingsRequests(
     userId: string,
     status?: string,
-  ): Promise<Booking[]> {
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+  ): Promise<{
+    data: Booking[];
+    total: number;
+    page: number;
+    pages: number;
+    limit: number;
+  }> {
+    const skip = (page - 1) * limit;
+  
     const query: any = {};
-
+  
     // If status is provided, use it in the query
     if (status) {
       query.bookingStatus = status;
@@ -55,28 +109,55 @@ export class BookingsService {
       // Exclude 'Fulfilled' status if no status is provided
       query.bookingStatus = { $ne: 'Fulfilled' };
     }
-
-    const bookings = await this.bookingModel
-      .find(query)
-      .populate('serviceInfo')
-      .populate({
-        path: 'createdBy',
-        select: 'firstName lastName',
-      })
-      .populate({
-        path: 'serviceInfo',
-        populate: {
+  
+    // Adding search functionality
+    if (search) {
+      query.$or = [
+        { 'serviceInfo.serviceTitle': { $regex: search, $options: 'i' } },
+        { 'serviceInfo.serviceDescription': { $regex: search, $options: 'i' } },
+      ];
+    }
+  
+    // Fetch data and count total documents
+    const [data, total] = await Promise.all([
+      this.bookingModel
+        .find(query)
+        .populate('serviceInfo')
+        .populate({
           path: 'createdBy',
           select: 'firstName lastName',
-        },
-      })
-      .exec();
-    return bookings.filter(
+        })
+        .populate({
+          path: 'serviceInfo',
+          populate: {
+            path: 'createdBy',
+            select: 'firstName lastName',
+          },
+        })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.bookingModel.countDocuments(query),
+    ]);
+  
+    // Filter the results where the createdBy field in serviceInfo matches userId
+    const filteredData = data.filter(
       (booking: any) =>
         booking?.serviceInfo?.createdBy?._id?.toString() === userId,
     );
+  
+    const pages = Math.ceil(total / limit);
+  
+    return {
+      data: filteredData,
+      total,
+      page,
+      pages,
+      limit,
+    };
   }
 
+  
   // Update booking status
   async updateStatus(
     id: string,
@@ -104,20 +185,40 @@ export class BookingsService {
   }
 
   // Add reviews
+  // async addReviews(
+  //   id: string,
+  //   addBookingReviewsDto: AddBookingReviewsDto,
+  // ): Promise<Booking> {
+  //   const booking = await this.bookingModel.findById(id);
+  //   if (!booking) {
+  //     throw new NotFoundException('Booking not found');
+  //   }
+  //   if (addBookingReviewsDto.serviceReviews) {
+  //     booking.serviceReviews = addBookingReviewsDto.serviceReviews;
+  //   }
+  //   if (addBookingReviewsDto.serviceRatings) {
+  //     booking.serviceRatings = addBookingReviewsDto.serviceRatings;
+  //   }
+  //   return booking.save();
+  // }
+
   async addReviews(
     id: string,
     addBookingReviewsDto: AddBookingReviewsDto,
   ): Promise<Booking> {
-    const booking = await this.bookingModel.findById(id);
+    const booking:any = await this.bookingModel.findById(id);
     if (!booking) {
       throw new NotFoundException('Booking not found');
     }
-    if (addBookingReviewsDto.serviceReviews) {
-      booking.serviceReviews = addBookingReviewsDto.serviceReviews;
+
+    if (addBookingReviewsDto.serviceReviewAndRatings) {
+      booking.serviceReviewAndRatings = {
+        ...booking.serviceReviewAndRatings,
+        ...addBookingReviewsDto.serviceReviewAndRatings,
+      };
     }
-    if (addBookingReviewsDto.serviceRatings) {
-      booking.serviceRatings = addBookingReviewsDto.serviceRatings;
-    }
+
     return booking.save();
   }
+
 }

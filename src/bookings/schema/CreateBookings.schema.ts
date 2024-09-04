@@ -17,11 +17,27 @@ export class Booking extends Document {
   @Prop({ required: false })
   bookingStatus: string;
 
-  @Prop({ required: false })
-  serviceRatings: number;
+  // @Prop({ required: false })
+  // serviceRatings: number;
 
-  @Prop({ required: false })
-  serviceReviews: string;
+  // @Prop({ required: false })
+  // serviceReviews: string;
+
+  @Prop({
+    type: {
+      serviceReview: { type: String, required: false },
+      serviceRatings: { type: Number, required: false },
+      createdBy: { type: MongooseSchema.Types.ObjectId, ref: 'User', required: false },
+      serviceReply: { type: String, required: false },
+    },
+    required: false,
+  })
+  serviceReviewAndRatings: {
+    serviceReview: string;
+    serviceRatings: number;
+    createdBy: User;
+    serviceReply: string;
+  };
 
   @Prop({ required: false })
   paymentStatus: string;

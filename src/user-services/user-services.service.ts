@@ -9,11 +9,15 @@ import { Model, Types } from 'mongoose';
 import { UserService } from './schema/UserService.schema';
 import { CreateUserServiceDto } from './dto/CreateUserService.dto';
 import { UpdateUserServiceDto } from './dto/UpdateUserService.dto';
+import { Booking } from 'src/bookings/schema/CreateBookings.schema';
+import { User } from 'src/users/schemas/User.schema';
 
 @Injectable()
 export class UserServicesService {
   constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(UserService.name) private userServiceModel: Model<UserService>,
+    @InjectModel(Booking.name) private readonly bookingModel: Model<Booking>,
   ) {}
 
   // async create(
@@ -22,7 +26,6 @@ export class UserServicesService {
   //   const newUserService = new this.userServiceModel(createUserServiceDto);
   //   return newUserService.save();
   // }
-
 
   // async create(
   //   createUserServiceDto: CreateUserServiceDto,
@@ -38,7 +41,6 @@ export class UserServicesService {
     const newUserService = new this.userServiceModel(createUserServiceDto);
     return newUserService.save();
   }
-  
 
   async findAll(
     page: number = 1,
@@ -49,7 +51,7 @@ export class UserServicesService {
     data: UserService[];
     total: number;
     page: number;
-    lastPage: number;
+    pages: number;
     limit: number;
   }> {
     const skip = (page - 1) * limit;
@@ -81,29 +83,69 @@ export class UserServicesService {
       this.userServiceModel.countDocuments(query),
     ]);
 
-    const lastPage = Math.ceil(total / limit);
+    const pages = Math.ceil(total / limit);
 
     return {
       data,
       page,
       limit,
       total,
-      lastPage,
+      pages,
     };
   }
 
-  async findOne(id: string): Promise<UserService> {
+
+  async findOne(id: string): Promise<any> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid ID format');
     }
-    const userService = await this.userServiceModel
+    const userService: any = await this.userServiceModel
       .findById(id)
-      .populate('createdBy')
+      .populate({
+        path: 'createdBy',
+        select: '_id',
+      })
       .exec();
     if (!userService) {
       throw new NotFoundException(`Service not found`);
     }
-    return userService;
+    const userId = userService.createdBy._id;
+    const sellerProfile = await this.userModel
+      .findById(userId)
+      .select('-password -__v -collaboratorProfile')
+      .populate({
+        path: 'sellerProfile',
+        select: '-__v',
+      });
+    if (!sellerProfile) {
+      throw new NotFoundException('Seller not found');
+    }
+    const bookings = await this.bookingModel
+      .find({ ownerId: userId, bookingStatus: 'Fulfilled', serviceInfo:id })
+      .populate({
+        path: 'serviceInfo',
+      })
+      .populate({
+        path: 'serviceReviewAndRatings.createdBy',
+        select: 'firstName lastName userAvatar', 
+      })
+      .select('serviceInfo bookingStatus createdAt updatedAt serviceReviewAndRatings ');
+
+    const servicesInfo = bookings.map((booking: any) => ({
+      serviceInfo: booking?.serviceInfo,
+      bookingId: booking?._id,
+      bookingStatus: booking?.bookingStatus,
+      createdAt: booking?.createdAt,
+      updatedAt: booking?.updatedAt,
+      serviceReviewAndRatings: booking?.serviceReviewAndRatings,
+    }));
+    sellerProfile.sellerProfile.servicesInfo = servicesInfo;
+
+    return {
+      service: userService,
+      sellerProfile,
+      servicesInfo,
+    };
   }
 
   async update(

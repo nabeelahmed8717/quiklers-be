@@ -1,11 +1,27 @@
-import { IsOptional, IsString, IsNumber } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsOptional, IsString, IsNumber, ValidateNested } from 'class-validator';
 
-export class AddBookingReviewsDto {
+class ServiceReviewAndRatingsDto {
   @IsOptional()
   @IsString()
-  serviceReviews?: string;
+  serviceReview?: string;
 
   @IsOptional()
   @IsNumber()
   serviceRatings?: number;
+
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  serviceReply?: string;
+}
+
+export class AddBookingReviewsDto {
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ServiceReviewAndRatingsDto)
+  serviceReviewAndRatings?: ServiceReviewAndRatingsDto;
 }

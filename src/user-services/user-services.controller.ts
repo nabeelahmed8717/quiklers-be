@@ -37,26 +37,6 @@ export class UserServicesController {
     return this.userServicesService.getMyServices(userId);
   }
 
-  // @Post()
-  // @UseGuards(JwtAuthGuard)
-  // create(@Body() createUserServiceDto: CreateUserServiceDto, @Request() req) {
-  //   const userId = req?.user?._id;
-  //   if (userId) {
-  //     createUserServiceDto.createdBy = userId;
-  //     return this.userServicesService.create(createUserServiceDto);
-  //   }
-  // }
-
-  // @Post()
-  // @UseGuards(JwtAuthGuard)
-  // create(@Body() createUserServiceDto: CreateUserServiceDto, @Request() req) {
-  //   const userId = req?.user?._id
-  //   if(userId){
-  //     createUserServiceDto.createdBy = userId;
-  //     return this.userServicesService.create(createUserServiceDto);
-  //   }
-
-  // }
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -69,10 +49,7 @@ export class UserServicesController {
     const userId = req?.user?._id;
 
     if (userId) {
-      // Add the user ID to the DTO
       createUserServiceDto.createdBy = userId;
-      console.log('file', file);
-      // If a file was uploaded, include its details in the DTO
       if (file) {
         createUserServiceDto.serviceImage = {
           key: file.key,
@@ -81,7 +58,6 @@ export class UserServicesController {
           originalName: file.originalname,
         };
       }
-
       return this.userServicesService.create(createUserServiceDto);
     } else {
       throw new BadRequestException('User ID not provided');

@@ -1,12 +1,32 @@
+import { Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsString,
   IsEnum,
   IsOptional,
   IsBoolean,
+  ValidateNested,
+  IsNumber,
 } from 'class-validator';
 import { Types } from 'mongoose';
 
+class ServiceReviewAndRatingsDto {
+  @IsOptional()
+  @IsString()
+  serviceReview?: string;
+
+  @IsOptional()
+  @IsNumber()
+  serviceRatings?: number;
+
+  @IsOptional()
+  @IsString()
+  createdBy?: Types.ObjectId;
+
+  @IsOptional()
+  @IsString()
+  serviceReply?: string;
+}
 export class CreateBookingDto {
   @IsNotEmpty()
   @IsString()
@@ -30,13 +50,13 @@ export class CreateBookingDto {
   @IsEnum(['Unpaid', 'Paid', 'Refunded'])
   paymentStatus: string;
 
-  @IsOptional()
-  @IsString()
-  serviceRatings: number;
+  // @IsOptional()
+  // @IsString()
+  // serviceRatings: number;
 
-  @IsOptional()
-  @IsString()
-  serviceReviews: string;
+  // @IsOptional()
+  // @IsString()
+  // serviceReviews: string;
 
   @IsOptional()
   @IsString()
@@ -53,4 +73,9 @@ export class CreateBookingDto {
   @IsOptional()
   @IsBoolean()
   isUrgent: boolean;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ServiceReviewAndRatingsDto)
+  serviceReviewAndRatings?: ServiceReviewAndRatingsDto;
 }
