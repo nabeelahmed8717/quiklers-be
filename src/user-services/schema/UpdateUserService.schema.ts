@@ -1,9 +1,22 @@
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { Prop } from '@nestjs/mongoose';
+import { IsString, IsNumber, IsOptional, IsArray } from 'class-validator';
 
 export class UpdateUserServiceDto {
-  @IsOptional()
-  @IsString()
-  serviceImage?: string;
+  @Prop({
+    type: {
+      url: String,
+      key: String,
+      mimetype: String,
+      size: Number,
+      originalName: String,
+    },
+  })
+  serviceImage: {
+    key: string;
+    mimetype: string;
+    size: number;
+    originalName: string;
+  };
 
   @IsOptional()
   @IsString()
@@ -22,8 +35,8 @@ export class UpdateUserServiceDto {
   jobAvailabilityMode?: string;
 
   @IsOptional()
-  @IsString()
-  onlineSoftware?: string;
+  @IsString({ each: true })
+  onlineCommunicationSoftware?: string; // Changed to an array
 
   @IsOptional()
   @IsString()
@@ -40,6 +53,26 @@ export class UpdateUserServiceDto {
   @IsOptional()
   @IsNumber()
   hourlyRate?: number;
+
+  @IsOptional()
+  @IsNumber()
+  fixedRate?: number; // Added property
+
+  @IsOptional()
+  @IsNumber()
+  locationPreference?: number; // Added property
+
+  @IsOptional()
+  @IsString()
+  priceType?: string; // Added property
+
+  @IsOptional()
+  @IsString({ each: true })
+  searchTags?: string; // Changed to an array
+
+  @IsOptional()
+  @IsString()
+  serviceAvailability?: string; // Added property
 
   @IsOptional()
   @IsString()

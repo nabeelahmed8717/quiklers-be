@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from './dto/User.dto';
@@ -11,6 +11,8 @@ import { UpdateCollaboratorProfileDto } from './dto/UpdateCollaboratorProfile.dt
 import * as bcrypt from 'bcrypt';
 import { Booking } from 'src/bookings/schema/CreateBookings.schema';
 import { UpdateSellerAvailabilityDto } from './dto/UpdateSellerAvailibility.dto';
+import { FcmToken } from './schemas/CreateFcmToken.schema';
+import { CreateFcmTokenDto } from './dto/CreateFcm.dto';
 @Injectable()
 export class UsersService {
   constructor(
@@ -20,6 +22,9 @@ export class UsersService {
     private sellerProfileModel: Model<SellerProfile>,
     @InjectModel(CollaboratorProfile.name)
     private collaboratorProfileModel: Model<CollaboratorProfile>,
+
+    @InjectModel(FcmToken.name) private fcmTokenModel: Model<FcmToken>,
+
   ) {}
 
   async createUser({
@@ -27,6 +32,21 @@ export class UsersService {
     collaboratorProfile,
     ...createUserDto
   }: CreateUserDto) {
+
+    const existingUser = await this.userModel.findOne({
+      email: createUserDto.email, // Assuming email is unique
+    });
+    const existingUsername = await this.userModel.findOne({
+      email: createUserDto.username, // Assuming email is unique
+    });
+  
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+    if (existingUsername) {
+      throw new ConflictException('User with this username already exists');
+    }
+
     let sellerProfileId;
     let collaboratorProfileId;
 
@@ -198,6 +218,28 @@ export class UsersService {
     return sellerProfile;
   }
 
+  async isUsernameAvailable(username: string): Promise<boolean> {
+    const user = await this.userModel.findOne({ username }).exec();
+    return !user; // If user is null, the username is available
+  }
 
+  async isEmailAvailable(email: string): Promise<boolean> {
+    const user = await this.userModel.findOne({ email }).exec();
+    return !user; // If user is null, the username is available
+  }
+
+
+  async createOrUpdateFcmToken(createFcmTokenDto: CreateFcmTokenDto): Promise<FcmToken> {
+    const { userId, token } = createFcmTokenDto;
+  
+    const updatedToken = await this.fcmTokenModel.findOneAndUpdate(
+      { userId },
+      { token },
+      { new: true, upsert: true }
+    );
+  
+    return updatedToken;
+  }
+  
 
 }

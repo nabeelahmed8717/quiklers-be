@@ -17,11 +17,6 @@ export class Booking extends Document {
   @Prop({ required: false })
   bookingStatus: string;
 
-  // @Prop({ required: false })
-  // serviceRatings: number;
-
-  // @Prop({ required: false })
-  // serviceReviews: string;
 
   @Prop({
     type: {

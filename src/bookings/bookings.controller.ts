@@ -30,24 +30,12 @@ export class BookingsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  // async create(@Body() createBookingDto: CreateBookingDto, @Request() req) {
-
-  //   const serviceIdString = (createBookingDto.serviceInfo as Types.ObjectId).toString();
-
-  //   const service = await this.userServicesService.findOne(serviceIdString);
-  //   const ownerId = service.createdBy?.['_id']?.toString();
-
-  //   createBookingDto.ownerId = ownerId;
-  //   createBookingDto.createdBy = req?.user?._id;
-  //   return this.bookingsService.create(createBookingDto);
-  // }
   async create(@Body() createBookingDto: CreateBookingDto, @Request() req) {
     try {
       const serviceIdString = (
         createBookingDto.serviceInfo as Types.ObjectId
       ).toString();
 
-      // Retrieve the service and its owner information
       const service = await this.userServicesService.findOne(serviceIdString);
 
       if (!service) {
@@ -59,15 +47,11 @@ export class BookingsController {
       if (!ownerId) {
         throw new Error('Owner ID not found');
       }
-
-      // Set the ownerId and createdBy fields in the DTO
       createBookingDto.ownerId = ownerId;
       createBookingDto.createdBy = req?.user?._id;
 
-      // Create the booking
       return await this.bookingsService.create(createBookingDto);
     } catch (error) {
-      // Log the error and return an appropriate response
       console.error('Error creating booking:', error.message);
       throw new BadRequestException(
         'Failed to create booking. ' + error.message,
@@ -75,16 +59,6 @@ export class BookingsController {
     }
   }
 
-  // @Get()
-  // @UseGuards(JwtAuthGuard)
-  // findAll(@Request() req, @Query('fulfilled') fulfilled: string) {
-  //   const userId = req?.user?._id;
-  //   if (userId) {
-  //     console.log('userId', userId);
-  //     const status = fulfilled === 'true' ? 'Fulfilled' : null;
-  //     return this.bookingsService.findAll(userId, status);
-  //   }
-  // }
 
   @Get()
   @UseGuards(JwtAuthGuard)
@@ -109,20 +83,6 @@ export class BookingsController {
       );
     }
   }
-
-  // @Get('/requests')
-  // @UseGuards(JwtAuthGuard)
-  // async findAllBookingsRequests(
-  //   @Request() req,
-  //   @Query('fulfilled') fulfilled: string,
-  // ) {
-  //   const userId = req?.user?._id;
-  //   if (userId) {
-  //     console.log('userId', userId);
-  //     const status = fulfilled === 'true' ? 'Fulfilled' : null;
-  //     return this.bookingsService.findAllBookingsRequests(userId, status);
-  //   }
-  // }
 
   @Get('/requests')
   @UseGuards(JwtAuthGuard)
@@ -166,15 +126,6 @@ export class BookingsController {
     return this.bookingsService.updatePayment(id, updateBookingPaymentDto);
   }
 
-  // @Patch(':id/add-reviews')
-  // @UseGuards(JwtAuthGuard)
-  // @UsePipes(new ValidationPipe())
-  // addReviews(
-  //   @Param('id') id: string,
-  //   @Body() addReviewsDto: AddBookingReviewsDto,
-  // ) {
-  //   return this.bookingsService.addReviews(id, addReviewsDto);
-  // }
 
   @Patch(':id/add-reviews')
   @UseGuards(JwtAuthGuard)

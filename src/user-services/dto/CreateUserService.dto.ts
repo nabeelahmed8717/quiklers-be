@@ -1,6 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
-
+import {
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsArray,
+} from 'class-validator';
 
 class ImageDto {
   @IsString()
@@ -17,7 +22,6 @@ class ImageDto {
 }
 
 export class CreateUserServiceDto {
-
   @IsOptional()
   @Type(() => ImageDto) // Specify the class type
   serviceImage: ImageDto;
@@ -32,8 +36,12 @@ export class CreateUserServiceDto {
   jobAvailabilityMode: string;
 
   @IsOptional()
-  @IsString()
-  onlineSoftware?: string;
+  @IsString({ each: true })
+  onlineCommunicationSoftware?: string; // Should be an array of strings
+  
+  @IsOptional()
+  @IsString({ each: true })
+  searchTags?: string; // Should be an array of strings
 
   @IsOptional()
   @IsNotEmpty()
@@ -50,8 +58,8 @@ export class CreateUserServiceDto {
   physicalAvailabilityMode?: string;
 
   @IsOptional()
-  @IsNotEmpty()
   @IsNumber()
+  @Type(() => Number)
   hourlyRate: number;
 
   @IsOptional()
@@ -63,6 +71,22 @@ export class CreateUserServiceDto {
   @IsNotEmpty()
   @IsString()
   serviceTypeTitle: string; // User ID from token
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  fixedRate?: number; // Added property
+
+  @IsOptional()
+  @IsNumber()
+  locationPreference?: number; // Added property
+
+  @IsOptional()
+  @IsString()
+  priceType?: string; // Added property
+
+
+  @IsOptional()
+  @IsString()
+  serviceAvailability?: string; // Added property
 }
-
-

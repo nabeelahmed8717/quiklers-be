@@ -5,13 +5,6 @@ import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/schemas/User.schema';
 import * as bcrypt from 'bcrypt';
 
-const fakeUser = [
-  {
-    id: 1,
-    username: 'admin',
-    password: '111',
-  },
-];
 
 @Injectable()
 export class AuthService {

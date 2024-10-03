@@ -39,9 +39,6 @@ export class User {
 
   @Prop()
   country: string;
-
-  // @Prop()
-  // userAvatar: string;
   @Prop({
     type: {
       url: String,

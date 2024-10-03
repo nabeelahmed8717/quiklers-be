@@ -1,17 +1,33 @@
-// import { PartialType } from '@nestjs/mapped-types';
-// import { CreateUserServiceDto } from './CreateUserService.dto';
+import { Type } from 'class-transformer';
+import { IsString, IsNumber, IsOptional, IsArray } from 'class-validator';
 
-// export class UpdateUserServiceDto extends PartialType(CreateUserServiceDto) {}
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+
+class ImageDto {
+  @IsString()
+  key: string;
+
+  @IsString()
+  mimetype: string;
+
+  @IsNumber()
+  size: number;
+
+  @IsString()
+  originalName: string;
+}
 
 export class UpdateUserServiceDto {
   @IsOptional()
-  @IsString()
-  serviceImage?: string;
+  @Type(() => ImageDto) // Specify the class type
+  serviceImage: ImageDto;
 
   @IsOptional()
   @IsString()
   serviceTitle?: string;
+  
+  @IsOptional()
+  @IsString()
+  serviceTypeTitle?: string;
 
   @IsOptional()
   @IsNumber()
@@ -22,8 +38,8 @@ export class UpdateUserServiceDto {
   jobAvailabilityMode?: string;
 
   @IsOptional()
-  @IsString()
-  onlineSoftware?: string;
+  @IsString({ each: true })
+  onlineCommunicationSoftware?: string; // Changed to an array
 
   @IsOptional()
   @IsString()
@@ -39,6 +55,31 @@ export class UpdateUserServiceDto {
 
   @IsOptional()
   @IsNumber()
+   @Type(() => Number)
   hourlyRate?: number;
 
+  @IsOptional()
+  @IsNumber()
+   @Type(() => Number)
+  fixedRate?: number; // Added property
+
+  @IsOptional()
+  @IsNumber()
+  locationPreference?: number; // Added property
+
+  @IsOptional()
+  @IsString()
+  priceType?: string; // Added property
+
+  @IsOptional()
+  @IsString({ each: true })
+  searchTags?: string; // Changed to an array
+
+  @IsOptional()
+  @IsString()
+  serviceAvailability?: string; // Added property
+
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
 }

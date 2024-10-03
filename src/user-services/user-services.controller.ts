@@ -37,7 +37,6 @@ export class UserServicesController {
     return this.userServicesService.getMyServices(userId);
   }
 
-
   @Post()
   @UseGuards(JwtAuthGuard)
   @FileInterceptorFactory('arr-quiklers') // Replace with your actual bucket name
@@ -47,9 +46,12 @@ export class UserServicesController {
     @Request() req,
   ) {
     const userId = req?.user?._id;
+    console.log('createUserServiceDto', createUserServiceDto);
+    console.log('userId', userId);
 
     if (userId) {
       createUserServiceDto.createdBy = userId;
+
       if (file) {
         createUserServiceDto.serviceImage = {
           key: file.key,
@@ -64,8 +66,8 @@ export class UserServicesController {
     }
   }
 
+  //PUBLIC ROUTE
   @Get()
-  @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe())
   findAll(
     @Query('page') page: string = '1',
@@ -83,20 +85,39 @@ export class UserServicesController {
     );
   }
 
+  //PUBLIC ROUTE
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string) {
     return this.userServicesService.findOne(id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  @UsePipes(new ValidationPipe())
-  update(
+  @FileInterceptorFactory('arr-quiklers') // For handling file uploads
+  async update(
     @Param('id') id: string,
     @Body() updateUserServiceDto: UpdateUserServiceDto,
+    @UploadedFile() file: CustomFile,
+    @Request() req,
   ) {
-    return this.userServicesService.update(id, updateUserServiceDto);
+    const userId = req?.user?._id;
+    console.log('updateUserServiceDto', updateUserServiceDto);
+    console.log('userId', userId);
+
+    if (userId) {
+      if (file) {
+        updateUserServiceDto.serviceImage = {
+          key: file.key,
+          mimetype: file.mimetype,
+          size: file.size,
+          originalName: file.originalname,
+        };
+      }
+      return this.userServicesService.update(id, updateUserServiceDto);
+    } else {
+      throw new BadRequestException('User ID not provided');
+    }
   }
 
   @Delete(':id')

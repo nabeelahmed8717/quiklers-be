@@ -4,9 +4,6 @@ import { User } from 'src/users/schemas/User.schema';
 
 @Schema({ timestamps: true })
 export class UserService extends Document {
-  // @Prop({ required: true })
-  // serviceImage: string;
-
   @Prop({
     type: {
       url: String,
@@ -32,7 +29,7 @@ export class UserService extends Document {
   @Prop({ required: false })
   jobAvailabilityMode: string;
 
-  @Prop({required:false})
+  @Prop({ required: false })
   onlineSoftware?: string;
 
   @Prop({ required: false })
@@ -50,13 +47,28 @@ export class UserService extends Document {
   @Prop({ required: false })
   hourlyRate: number;
 
+  @Prop({ required: false })
+  fixedRate: number;
+
+  @Prop({ required: false })
+  locationPreference: number;
+
+  @Prop({ required: false, }) // For onlineCommunicationSoftware
+  onlineCommunicationSoftware: string;
+  
+  @Prop({ required: false, }) // For searchTags
+  searchTags: string;
+
+  @Prop({ required: false })
+  priceType: string;
+
+  @Prop({ required: false })
+  serviceAvailability: string;
+
+  //new props
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: false })
   createdBy: User;
-
-
 }
 
 export const UserServiceSchema = SchemaFactory.createForClass(UserService);
-
-

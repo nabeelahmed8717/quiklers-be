@@ -20,19 +20,7 @@ export class UserServicesService {
     @InjectModel(Booking.name) private readonly bookingModel: Model<Booking>,
   ) {}
 
-  // async create(
-  //   createUserServiceDto: CreateUserServiceDto,
-  // ): Promise<UserService> {
-  //   const newUserService = new this.userServiceModel(createUserServiceDto);
-  //   return newUserService.save();
-  // }
 
-  // async create(
-  //   createUserServiceDto: CreateUserServiceDto,
-  // ): Promise<UserService> {
-  //   const newUserService = new this.userServiceModel(createUserServiceDto);
-  //   return newUserService.save();
-  // }
 
   async create(
     createUserServiceDto: CreateUserServiceDto,
@@ -41,6 +29,9 @@ export class UserServicesService {
     const newUserService = new this.userServiceModel(createUserServiceDto);
     return newUserService.save();
   }
+
+
+
 
   async findAll(
     page: number = 1,
@@ -66,6 +57,7 @@ export class UserServicesService {
       : {};
     const userQuery = userId ? { createdBy: userId } : {};
     const query = { ...searchQuery, ...userQuery };
+  
     const [data, total] = await Promise.all([
       this.userServiceModel
         .find(query)
@@ -82,17 +74,57 @@ export class UserServicesService {
         .exec(),
       this.userServiceModel.countDocuments(query),
     ]);
-
+  
+    // Fetch servicesInfo for each service
+    const enrichedData = await Promise.all(
+      data.map(async (userService: any) => {
+        // Check if createdBy exists
+        if (!userService.createdBy || !userService.createdBy._id) {
+          return {
+            ...userService.toObject(),
+            servicesInfo: [], // return an empty servicesInfo array if createdBy is not available
+          };
+        }
+  
+        const userId = userService.createdBy._id;
+        const bookings = await this.bookingModel
+          .find({ ownerId: userId, bookingStatus: 'Fulfilled', serviceInfo: userService._id })
+          .populate({
+            path: 'serviceInfo',
+          })
+          .populate({
+            path: 'serviceReviewAndRatings.createdBy',
+            select: 'firstName lastName userAvatar',
+          })
+          .select('serviceInfo bookingStatus createdAt updatedAt serviceReviewAndRatings');
+  
+        const servicesInfo = bookings.map((booking: any) => ({
+          serviceInfo: booking?.serviceInfo,
+          bookingId: booking?._id,
+          bookingStatus: booking?.bookingStatus,
+          createdAt: booking?.createdAt,
+          updatedAt: booking?.updatedAt,
+          serviceReviewAndRatings: booking?.serviceReviewAndRatings,
+        }));
+  
+        return {
+          ...userService.toObject(),
+          servicesInfo,
+        };
+      })
+    );
+  
     const pages = Math.ceil(total / limit);
-
+  
     return {
-      data,
+      data: enrichedData,
       page,
       limit,
       total,
       pages,
     };
   }
+  
 
 
   async findOne(id: string): Promise<any> {
@@ -152,19 +184,11 @@ export class UserServicesService {
     id: string,
     updateUserServiceDto: UpdateUserServiceDto,
   ): Promise<UserService> {
-    if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('Invalid ID format');
-    }
-    const userService = await this.userServiceModel
-      .findByIdAndUpdate(id, updateUserServiceDto, { new: true })
-      .populate('createdBy')
+    return this.userServiceModel
+      .findByIdAndUpdate(id, updateUserServiceDto, { new: true })  // Updates and returns updated document
       .exec();
-    if (!userService) {
-      throw new NotFoundException(`Service not found`);
-    }
-    return userService;
   }
-
+  
   async remove(id: string, userId: string): Promise<{ message: string }> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid ID format');

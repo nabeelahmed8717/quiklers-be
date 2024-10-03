@@ -26,14 +26,15 @@ import { UpdateSellerAvailabilityDto } from './dto/UpdateSellerAvailibility.dto'
 
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
-const envConfig = dotenv.parse(fs.readFileSync('.env'));
-import { CustomFile } from 'src/common/interfaces/Express.Multer.File';
 import { FileInterceptorFactory } from 'src/common/decorators/file-interceptor.decorator';
 import { MulterBackblazeStorage } from 'src/common/engine/multer-backblaze-storage';
+import { CreateFcmTokenDto } from './dto/CreateFcm.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
+
+  
   @Post()
   @UsePipes(new ValidationPipe())
   createUser(@Body() createUserDto: CreateUserDto) {
@@ -99,26 +100,6 @@ export class UsersController {
     );
   }
 
-  // @Patch('upload-image')
-  // @UseGuards(JwtAuthGuard)
-  // @FileInterceptorFactory()
-  // async uploadImage(@UploadedFile() file: CustomFile, @Request() req) {
-  //   if (!file) {
-  //     throw new HttpException('File not provided', HttpStatus.BAD_REQUEST);
-  //   }
-  //   const userId = req.user._id;
-  //   const updatedUser = await this.usersService.updateUserImagePath(userId, {
-  //     key: file.key,
-  //     mimetype: file.mimetype,
-  //     size: file.size,
-  //     originalName: file.originalname,
-  //   });
-  //   return {
-  //     message: 'Image uploaded successfully',
-  //     user: updatedUser,
-  //   };
-  // }
-
   @Patch('upload-image')
   @UseGuards(JwtAuthGuard)
   @FileInterceptorFactory('arr-quiklers') // Replace with your actual bucket name
@@ -142,7 +123,7 @@ export class UsersController {
     if (oldImageKey && oldImageName) {
       const storage = new MulterBackblazeStorage({
         bucketName: 'arr-quiklers',
-      }); 
+      });
       try {
         await storage._removeFile(req, user?.userAvatar, (err) => {
           if (err) {
@@ -193,4 +174,25 @@ export class UsersController {
       updateSellerAvailabilityDto,
     );
   }
+
+  @Get('check-username/:username')
+  async checkUsernameAvailability(@Param('username') username: string) {
+    const isAvailable = await this.usersService.isUsernameAvailable(username);
+    return { available: isAvailable };
+  }
+
+  @Get('check-email/:email')
+  async checkEmailAvailability(@Param('email') email: string) {
+    const isAvailable = await this.usersService.isEmailAvailable(email);
+    return { available: isAvailable };
+  }
+
+
+  @UsePipes(new ValidationPipe())
+  @Post('fcm-token')
+  async saveFcmToken(@Body() createFcmTokenDto: CreateFcmTokenDto) {
+    const updatedToken = await this.usersService.createOrUpdateFcmToken(createFcmTokenDto);
+    return { message: 'FCM token saved successfully', token: updatedToken };
+  }
+
 }

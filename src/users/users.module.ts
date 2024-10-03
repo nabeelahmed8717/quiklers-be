@@ -6,6 +6,7 @@ import { User, UserScheme } from './schemas/User.schema';
 import { SellerProfile, SellerProfileScheme } from './schemas/SellerProfileSchema';
 import { CollaboratorProfile, CollaboratorProfileScheme } from './schemas/CollaboratorProfileSchema';
 import { Booking, BookingSchema } from 'src/bookings/schema/CreateBookings.schema';
+import { FcmToken, FcmTokenSchema } from './schemas/CreateFcmToken.schema';
 
 @Module({
   imports: [
@@ -21,6 +22,10 @@ import { Booking, BookingSchema } from 'src/bookings/schema/CreateBookings.schem
       {
         name: CollaboratorProfile.name,
         schema: CollaboratorProfileScheme,
+      },
+      {
+        name: FcmToken.name, // Register the FcmToken schema
+        schema: FcmTokenSchema,
       },
     ]),
     MongooseModule.forFeature([{ name: Booking.name, schema: BookingSchema }]),

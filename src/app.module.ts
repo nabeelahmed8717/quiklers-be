@@ -4,6 +4,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { UserServicesModule } from './user-services/user-services.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { EventsGateway } from './events/events.gateway';
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
 
@@ -19,6 +20,6 @@ const envConfig = dotenv.parse(fs.readFileSync('.env'));
     BookingsModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [EventsGateway],
 })
 export class AppModule {}
