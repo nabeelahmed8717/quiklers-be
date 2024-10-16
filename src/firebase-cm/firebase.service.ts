@@ -3,33 +3,18 @@ import * as admin from 'firebase-admin';
 
 @Injectable()
 export class FirebaseService {
+  
   constructor() {
-    const serviceAccount = require('../../keys/fbKey.json');
-
     if (admin.apps.length === 0) {
       admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        }),
       });
     }
   }
-
-  // async sendNotification(token: string, title: string, message: string) {
-  //   const payload: admin.messaging.MessagingPayload = {
-  //     notification: {
-  //       title: title,
-  //       body: message,
-  //     },
-  //   };
-
-  //   try {
-  //     const response = await admin.messaging().sendToDevice(token, payload);
-  //     console.log('Successfully sent message:', response);
-  //     return response;
-  //   } catch (error) {
-  //     console.error('Error sending message:', error);
-  //     throw error;
-  //   }
-  // }
 
   async sendNotification(token: string, title: string, message: string) {
     const payload: any = {

@@ -66,6 +66,17 @@ export class UserServicesController {
     }
   }
 
+
+
+
+  @Get('search')
+  @UsePipes(new ValidationPipe())
+  search(@Query('search') search: string) {
+    return this.userServicesService.searchServices(search);
+  }
+  
+
+
   //PUBLIC ROUTE
   @Get()
   @UsePipes(new ValidationPipe())
@@ -120,10 +131,31 @@ export class UserServicesController {
     }
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   remove(@Param('id') id: string, @Request() req) {
     const userId = req.user._id;
     return this.userServicesService.remove(id, userId);
   }
+
+
 }

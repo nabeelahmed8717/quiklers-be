@@ -20,8 +20,6 @@ export class UserServicesService {
     @InjectModel(Booking.name) private readonly bookingModel: Model<Booking>,
   ) {}
 
-
-
   async create(
     createUserServiceDto: CreateUserServiceDto,
   ): Promise<UserService> {
@@ -29,9 +27,6 @@ export class UserServicesService {
     const newUserService = new this.userServiceModel(createUserServiceDto);
     return newUserService.save();
   }
-
-
-
 
   async findAll(
     page: number = 1,
@@ -52,12 +47,13 @@ export class UserServicesService {
             { serviceTitle: { $regex: search, $options: 'i' } },
             { serviceDescription: { $regex: search, $options: 'i' } },
             { serviceType: { $regex: search, $options: 'i' } },
+            { searchTags: { $regex: search, $options: 'i' } },
           ],
         }
       : {};
     const userQuery = userId ? { createdBy: userId } : {};
     const query = { ...searchQuery, ...userQuery };
-  
+
     const [data, total] = await Promise.all([
       this.userServiceModel
         .find(query)
@@ -74,7 +70,7 @@ export class UserServicesService {
         .exec(),
       this.userServiceModel.countDocuments(query),
     ]);
-  
+
     // Fetch servicesInfo for each service
     const enrichedData = await Promise.all(
       data.map(async (userService: any) => {
@@ -85,10 +81,14 @@ export class UserServicesService {
             servicesInfo: [], // return an empty servicesInfo array if createdBy is not available
           };
         }
-  
+
         const userId = userService.createdBy._id;
         const bookings = await this.bookingModel
-          .find({ ownerId: userId, bookingStatus: 'Fulfilled', serviceInfo: userService._id })
+          .find({
+            ownerId: userId,
+            bookingStatus: 'Fulfilled',
+            serviceInfo: userService._id,
+          })
           .populate({
             path: 'serviceInfo',
           })
@@ -96,8 +96,10 @@ export class UserServicesService {
             path: 'serviceReviewAndRatings.createdBy',
             select: 'firstName lastName userAvatar',
           })
-          .select('serviceInfo bookingStatus createdAt updatedAt serviceReviewAndRatings');
-  
+          .select(
+            'serviceInfo bookingStatus createdAt updatedAt serviceReviewAndRatings',
+          );
+
         const servicesInfo = bookings.map((booking: any) => ({
           serviceInfo: booking?.serviceInfo,
           bookingId: booking?._id,
@@ -106,16 +108,16 @@ export class UserServicesService {
           updatedAt: booking?.updatedAt,
           serviceReviewAndRatings: booking?.serviceReviewAndRatings,
         }));
-  
+
         return {
           ...userService.toObject(),
           servicesInfo,
         };
-      })
+      }),
     );
-  
+
     const pages = Math.ceil(total / limit);
-  
+
     return {
       data: enrichedData,
       page,
@@ -124,8 +126,6 @@ export class UserServicesService {
       pages,
     };
   }
-  
-
 
   async findOne(id: string): Promise<any> {
     if (!Types.ObjectId.isValid(id)) {
@@ -153,15 +153,17 @@ export class UserServicesService {
       throw new NotFoundException('Seller not found');
     }
     const bookings = await this.bookingModel
-      .find({ ownerId: userId, bookingStatus: 'Fulfilled', serviceInfo:id })
+      .find({ ownerId: userId, bookingStatus: 'Fulfilled', serviceInfo: id })
       .populate({
         path: 'serviceInfo',
       })
       .populate({
         path: 'serviceReviewAndRatings.createdBy',
-        select: 'firstName lastName userAvatar', 
+        select: 'firstName lastName userAvatar',
       })
-      .select('serviceInfo bookingStatus createdAt updatedAt serviceReviewAndRatings ');
+      .select(
+        'serviceInfo bookingStatus createdAt updatedAt serviceReviewAndRatings ',
+      );
 
     const servicesInfo = bookings.map((booking: any) => ({
       serviceInfo: booking?.serviceInfo,
@@ -185,10 +187,10 @@ export class UserServicesService {
     updateUserServiceDto: UpdateUserServiceDto,
   ): Promise<UserService> {
     return this.userServiceModel
-      .findByIdAndUpdate(id, updateUserServiceDto, { new: true })  // Updates and returns updated document
+      .findByIdAndUpdate(id, updateUserServiceDto, { new: true }) // Updates and returns updated document
       .exec();
   }
-  
+
   async remove(id: string, userId: string): Promise<{ message: string }> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid ID format');
@@ -235,4 +237,83 @@ export class UserServicesService {
 
     return userServices;
   }
+
+
+
+
+
+  async searchServices(
+    search: string,
+  ): Promise<{
+    searchTags: string[];
+    services: { id: string; title: string }[];
+  }> {
+    if (!search || search?.length < 1) {
+      return {
+        searchTags: [],
+        services: [],
+      };
+    }
+  
+    const simpleSearchQuery = {
+      $or: [
+        { serviceTitle: { $regex: search, $options: 'i' } },
+        { serviceDescription: { $regex: search, $options: 'i' } },
+        { serviceType: { $regex: search, $options: 'i' } },
+      ],
+    };
+  
+    const filteredServices = await this.userServiceModel
+      .find(simpleSearchQuery)
+      .exec();
+  
+    const relevantTags = new Set<string>(); 
+    const tagCounts: Record<string, number> = {};
+  
+    filteredServices.forEach((service) => {
+      const tags = Array.isArray(service.searchTags)
+        ? service.searchTags
+        : JSON.parse(service.searchTags || '[]');
+      tags.forEach((tag) => {
+        if (tag.toLowerCase().includes(search.toLowerCase())) {
+          if (tagCounts[tag]) {
+            tagCounts[tag]++;
+          } else {
+            tagCounts[tag] = 1;
+          }
+          relevantTags.add(tag);
+        }
+      });
+    });
+  
+    const sortedRelevantTags = Array.from(relevantTags).sort((a, b) => {
+      const countA = tagCounts[a] || 0;
+      const countB = tagCounts[b] || 0;
+  
+      const exactMatchA = a.toLowerCase() === search.toLowerCase() ? 1 : 0;
+      const exactMatchB = b.toLowerCase() === search.toLowerCase() ? 1 : 0;
+  
+      return exactMatchB - exactMatchA || countB - countA;
+    });
+  
+    // Check if the search term exists in the tags
+    if (!sortedRelevantTags.includes(search)) {
+      // Add the search term to the top if it's not already in the tags
+      sortedRelevantTags.unshift(search);
+    }
+  
+    // Format the services and limit to top 10
+    const formattedServices = filteredServices.map((service) => ({
+      id: service._id.toString(),
+      title: service.serviceTitle,
+    }));
+    const top10Services = formattedServices.slice(0, 10);
+  
+    return {
+      searchTags: sortedRelevantTags, // Return searchTags with user's search value at the top
+      services: top10Services,        // Return the top 10 services
+    };
+  }
+  
+  
 }

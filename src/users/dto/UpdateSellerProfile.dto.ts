@@ -19,10 +19,10 @@ class AddressDto {
 
 class EducationDto {
   @IsString()
-  title: string;
+  degree: string;
 
   @IsString()
-  description: string;
+  institution: string;
 }
 
 export class UpdateSellerProfileDto {

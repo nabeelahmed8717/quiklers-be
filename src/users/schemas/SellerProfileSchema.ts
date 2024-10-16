@@ -11,10 +11,10 @@ class Address {
 
 class Education {
   @Prop({ required: true })
-  title: string;
+  degree: string;
 
   @Prop({ required: true })
-  description: string;
+  institution: string;
 }
 class servicesInfo {
   

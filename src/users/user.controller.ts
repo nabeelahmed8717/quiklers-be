@@ -9,6 +9,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Request,
   UploadedFile,
   UseGuards,
@@ -34,7 +35,6 @@ import { CreateFcmTokenDto } from './dto/CreateFcm.dto';
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
-  
   @Post()
   @UsePipes(new ValidationPipe())
   createUser(@Body() createUserDto: CreateUserDto) {
@@ -154,8 +154,8 @@ export class UsersController {
 
   @Get('seller-profile')
   @UseGuards(JwtAuthGuard)
-  async sellerProfile(@Request() req) {
-    const userId = req?.user?._id;
+  async sellerProfile(@Query('id') id: string, @Request() req) {
+    const userId = id || req?.user?._id;
     return this.usersService.getSellerProfile(userId);
   }
 
@@ -187,12 +187,11 @@ export class UsersController {
     return { available: isAvailable };
   }
 
-
   @UsePipes(new ValidationPipe())
   @Post('fcm-token')
   async saveFcmToken(@Body() createFcmTokenDto: CreateFcmTokenDto) {
-    const updatedToken = await this.usersService.createOrUpdateFcmToken(createFcmTokenDto);
+    const updatedToken =
+      await this.usersService.createOrUpdateFcmToken(createFcmTokenDto);
     return { message: 'FCM token saved successfully', token: updatedToken };
   }
-
 }
