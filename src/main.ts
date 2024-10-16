@@ -11,7 +11,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors();
-  app.use(new DelayMiddleware().use);
+  // app.use(new DelayMiddleware().use);
   await app.listen(3000);
 }
 bootstrap();
