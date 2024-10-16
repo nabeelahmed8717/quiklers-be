@@ -10,7 +10,8 @@ import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({
   cors: {
-    origin: 'http://localhost:3001', // Replace with the actual client origin or '*'
+    origin: 'https://889a-39-40-97-234.ngrok-free.app', // Replace with the actual client origin or '*'
+    // origin: 'http://localhost:3001', // Replace with the actual client origin or '*'
     credentials: true,
   },
 })
