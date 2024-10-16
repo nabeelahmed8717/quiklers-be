@@ -8,12 +8,13 @@ import { EventsGateway } from './events/events.gateway';
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
 
-const envConfig = dotenv.parse(fs.readFileSync('.env'));
+dotenv.config();
+
 
 @Module({
   imports: [
     // MongooseModule.forRoot('mongodb://localhost:27017/quiklers'),
-    MongooseModule.forRoot(envConfig.MONGODB_URI),
+    MongooseModule.forRoot(process.env.MONGODB_URI),
     UsersModule,
     AuthModule,
     UserServicesModule,
