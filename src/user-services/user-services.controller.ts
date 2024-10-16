@@ -24,7 +24,6 @@ import * as dotenv from 'dotenv';
 import { FileInterceptorFactory } from 'src/common/decorators/file-interceptor.decorator';
 import { CustomFile } from 'src/common/interfaces/Express.Multer.File';
 
-const envConfig = dotenv.parse(fs.readFileSync('.env'));
 
 @Controller('user-services')
 export class UserServicesController {
