@@ -57,6 +57,7 @@ export class UserServicesService {
     const [data, total] = await Promise.all([
       this.userServiceModel
         .find(query)
+        .sort({ createdAt: -1 })
         .populate({
           path: 'createdBy',
           select: '-password',
