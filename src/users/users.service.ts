@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from './dto/User.dto';
@@ -13,33 +17,37 @@ import { Booking } from 'src/bookings/schema/CreateBookings.schema';
 import { UpdateSellerAvailabilityDto } from './dto/UpdateSellerAvailibility.dto';
 import { FcmToken } from './schemas/CreateFcmToken.schema';
 import { CreateFcmTokenDto } from './dto/CreateFcm.dto';
+import { Company } from './schemas/createCompany.schema';
+import { UpdateCompanyDto } from './dto/UpdateCompany.dto';
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Booking.name) private readonly bookingModel: Model<Booking>,
+    @InjectModel(Company.name) private companyModel: Model<Company>,
     @InjectModel(SellerProfile.name)
     private sellerProfileModel: Model<SellerProfile>,
     @InjectModel(CollaboratorProfile.name)
     private collaboratorProfileModel: Model<CollaboratorProfile>,
 
     @InjectModel(FcmToken.name) private fcmTokenModel: Model<FcmToken>,
-
   ) {}
 
   async createUser({
     sellerProfile,
     collaboratorProfile,
+    isCompany,
+    companyProfile,
     ...createUserDto
   }: CreateUserDto) {
-
+    // Check if email or username already exists
     const existingUser = await this.userModel.findOne({
-      email: createUserDto.email, // Assuming email is unique
+      email: createUserDto.email,
     });
     const existingUsername = await this.userModel.findOne({
-      email: createUserDto.username, // Assuming email is unique
+      username: createUserDto.username,
     });
-  
+
     if (existingUser) {
       throw new ConflictException('User with this email already exists');
     }
@@ -47,35 +55,56 @@ export class UsersService {
       throw new ConflictException('User with this username already exists');
     }
 
-    let sellerProfileId;
-    let collaboratorProfileId;
-
-    if (sellerProfile) {
-      // const newSellerProfile = new this.sellerProfileModel(sellerProfile);
-      const newSellerProfile = new this.sellerProfileModel({
-        ...sellerProfile,
-        isProfileVerified: false,
-      });
-      const savedSellerProfile = await newSellerProfile.save();
-      sellerProfileId = savedSellerProfile._id;
-    }
-
-    if (collaboratorProfile) {
-      const newCollaboratorProfile = new this.collaboratorProfileModel({
-        ...collaboratorProfile,
-        isProfileVerified: false,
-        servicesDone: [],
-      });
-      const savedCollaboratorProfile = await newCollaboratorProfile.save();
-      collaboratorProfileId = savedCollaboratorProfile._id;
-    }
-
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
 
+    let companyProfileId;
+    let sellerProfileId;
+    let collaboratorProfileId;
+
+    if (isCompany) {
+      // Ensure companyProfile is provided when isCompany is true
+      // if (!companyProfile || !companyProfile.name) {
+      //   throw new Error('Company profile details are required when creating a company user');
+      // }
+
+      // Create Company Profile
+      const newCompanyProfile = new this.companyModel({
+        ...companyProfile,
+        // name: companyProfile.name,
+      });
+      const savedCompanyProfile = await newCompanyProfile.save();
+      companyProfileId = savedCompanyProfile._id;
+    } else {
+      // Create SellerProfile if provided and not a company
+      if (sellerProfile) {
+        const newSellerProfile = new this.sellerProfileModel({
+          ...sellerProfile,
+          isProfileVerified: false,
+        });
+        const savedSellerProfile = await newSellerProfile.save();
+        sellerProfileId = savedSellerProfile._id;
+      }
+
+      // Create CollaboratorProfile if provided and not a company
+      if (collaboratorProfile) {
+        const newCollaboratorProfile = new this.collaboratorProfileModel({
+          ...collaboratorProfile,
+          isProfileVerified: false,
+          servicesDone: [],
+        });
+        const savedCollaboratorProfile = await newCollaboratorProfile.save();
+        collaboratorProfileId = savedCollaboratorProfile._id;
+      }
+    }
+
+    // Create new user with appropriate profile references
     const newUser = new this.userModel({
       ...createUserDto,
-      password: hashedPassword, // Save hashed password
+      password: hashedPassword,
+      isCompany: isCompany,
+      ...(companyProfileId && { companyProfile: companyProfileId }),
       ...(sellerProfileId && { sellerProfile: sellerProfileId }),
       ...(collaboratorProfileId && {
         collaboratorProfile: collaboratorProfileId,
@@ -201,6 +230,23 @@ export class UsersService {
     return sellerProfile;
   }
 
+  async getCompanyProfile(userId: string): Promise<any> {
+    const user = await this.userModel
+      .findById(userId)
+      .select('companyProfile') // Only select the companyProfile field
+      .populate({
+        path: 'companyProfile',
+        select: '-__v', // Exclude __v field from companyProfile
+      })
+      .exec();
+
+    if (!user || !user.companyProfile) {
+      throw new NotFoundException('Company profile not found');
+    }
+
+    return user.companyProfile;
+  }
+
   async updateSellerAvailability(
     sellerProfileId: string,
     updateSellerAvailabilityDto: UpdateSellerAvailabilityDto,
@@ -228,18 +274,34 @@ export class UsersService {
     return !user; // If user is null, the username is available
   }
 
-
-  async createOrUpdateFcmToken(createFcmTokenDto: CreateFcmTokenDto): Promise<FcmToken> {
+  async createOrUpdateFcmToken(
+    createFcmTokenDto: CreateFcmTokenDto,
+  ): Promise<FcmToken> {
     const { userId, token } = createFcmTokenDto;
-  
+
     const updatedToken = await this.fcmTokenModel.findOneAndUpdate(
       { userId },
       { token },
-      { new: true, upsert: true }
+      { new: true, upsert: true },
     );
-  
+
     return updatedToken;
   }
-  
 
+  //COMPANIES
+
+  async update(id: string, updateCompanyDto: UpdateCompanyDto) {
+    return this.companyModel
+      .findByIdAndUpdate(
+        id,
+        {
+          ...updateCompanyDto,
+          isLogoDocVerifiedStatus: 'PENDING',
+          isTaxDocVerifiedStatus: 'PENDING',
+          isProofOfAddressVerifiedStatus: 'PENDING',
+        },
+        { new: true },
+      )
+      .exec();
+  }
 }

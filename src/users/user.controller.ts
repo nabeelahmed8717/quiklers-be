@@ -12,7 +12,9 @@ import {
   Query,
   Request,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -30,6 +32,9 @@ import * as dotenv from 'dotenv';
 import { FileInterceptorFactory } from 'src/common/decorators/file-interceptor.decorator';
 import { MulterBackblazeStorage } from 'src/common/engine/multer-backblaze-storage';
 import { CreateFcmTokenDto } from './dto/CreateFcm.dto';
+import { UpdateCompanyDto } from './dto/UpdateCompany.dto';
+import { CustomFile } from 'src/common/interfaces/Express.Multer.File';
+import { DynamicFileInterceptor } from 'src/common/decorators/files-interceptor.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -159,6 +164,13 @@ export class UsersController {
     return this.usersService.getSellerProfile(userId);
   }
 
+  @Get('company-profile')
+  @UseGuards(JwtAuthGuard)
+  async companyProfile(@Query('id') id: string, @Request() req) {
+    const userId = id || req?.user?._id;
+    return this.usersService.getCompanyProfile(userId);
+  }
+
   @Patch('seller-availability')
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe())
@@ -193,5 +205,54 @@ export class UsersController {
     const updatedToken =
       await this.usersService.createOrUpdateFcmToken(createFcmTokenDto);
     return { message: 'FCM token saved successfully', token: updatedToken };
+  }
+
+  // COMPANIES
+
+  @Patch('/update-company')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    new DynamicFileInterceptor('arr-quiklers', [
+      { name: 'logo', maxCount: 1 },
+      { name: 'proofAddress', maxCount: 1 },
+      { name: 'taxDocument', maxCount: 1 },
+    ]),
+  )
+  async update(@Body() updateCompanyDto: UpdateCompanyDto, @Request() req) {
+    const id = req?.user?.companyProfile;
+    if (!id) {
+      throw new BadRequestException('Company ID not provided');
+    }
+
+    const files: any = req.files as Record<string, Express.Multer.File[]>;
+
+    if (files.logo) {
+      updateCompanyDto.logo = {
+        key: files.logo[0].key,
+        mimetype: files.logo[0].mimetype,
+        size: files.logo[0].size,
+        originalName: files.logo[0].originalname,
+      };
+    }
+    if (files.proofAddress) {
+      updateCompanyDto.proofAddress = {
+        key: files.proofAddress[0].key,
+        mimetype: files.proofAddress[0].mimetype,
+        size: files.proofAddress[0].size,
+        originalName: files.proofAddress[0].originalname,
+      };
+    }
+    if (files.taxDocument) {
+      updateCompanyDto.taxDocument = {
+        key: files.taxDocument[0].key,
+        mimetype: files.taxDocument[0].mimetype,
+        size: files.taxDocument[0].size,
+        originalName: files.taxDocument[0].originalname,
+      };
+    }
+
+    // updateCompanyDto.ownerId
+
+    return this.usersService.update(id, updateCompanyDto);
   }
 }

@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { SellerProfile } from './SellerProfileSchema';
 import { CollaboratorProfile } from './CollaboratorProfileSchema';
+import { Company } from './createCompany.schema';
 
 @Schema({ timestamps: true }) 
 export class User {
@@ -28,6 +29,12 @@ export class User {
 
   @Prop()
   userRole: string[];
+  
+  @Prop()
+  isCompany:boolean;
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Company' })
+  companyProfile?: Company;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'SellerProfile' })
   sellerProfile?: SellerProfile;

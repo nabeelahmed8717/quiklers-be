@@ -7,6 +7,7 @@ import { SellerProfile, SellerProfileScheme } from './schemas/SellerProfileSchem
 import { CollaboratorProfile, CollaboratorProfileScheme } from './schemas/CollaboratorProfileSchema';
 import { Booking, BookingSchema } from 'src/bookings/schema/CreateBookings.schema';
 import { FcmToken, FcmTokenSchema } from './schemas/CreateFcmToken.schema';
+import { Company, CompanySchema } from './schemas/createCompany.schema';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { FcmToken, FcmTokenSchema } from './schemas/CreateFcmToken.schema';
         name: User.name,
         schema: UserScheme,
       },
+      { name: Company.name, schema: CompanySchema },
       {
         name: SellerProfile.name,
         schema: SellerProfileScheme,

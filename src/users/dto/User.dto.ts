@@ -5,8 +5,10 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
+import { CreateCompanyDto } from './createCompany.dto';
 
 export class CreateSellerProfileDto {}
 export class CreateCollaboratorProfileDto {}
@@ -45,13 +47,31 @@ export class CreateUserDto {
   country: string[];
 
   @IsOptional()
+  isCompany: boolean;
+
+  // @IsOptional()
+  // @ValidateNested()
+  // @Type(() => CreateSellerProfileDto)
+  // sellerProfile?: CreateSellerProfileDto;
+
+  // @IsOptional()
+  // @ValidateNested()
+  // @Type(() => CreateCollaboratorProfileDto)
+  // collaboratorProfile?: CreateCollaboratorProfileDto;
+
+  @ValidateIf((o) => o.isCompany)
+  @Type(() => CreateCompanyDto)
   @ValidateNested()
+  companyProfile?: CreateCompanyDto;
+
+  @ValidateIf((o) => !o.isCompany)
   @Type(() => CreateSellerProfileDto)
+  @ValidateNested()
   sellerProfile?: CreateSellerProfileDto;
 
-  @IsOptional()
-  @ValidateNested()
+  @ValidateIf((o) => !o.isCompany)
   @Type(() => CreateCollaboratorProfileDto)
+  @ValidateNested()
   collaboratorProfile?: CreateCollaboratorProfileDto;
   
 }
